@@ -71,8 +71,14 @@ env/
 venv/
 ENV/
 
+# Alembic
+versions/
+
 # mac files
 .DS_Store
 
 # node.js app
 node_modules
+
+# others
+MEMO.md
