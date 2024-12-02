@@ -64,14 +64,17 @@ workload managementはプロジェクトの工数管理を行うためのアプ�
 │   │   └── database.py      # workload table definition
 │   ├── config.py
 │   └── main.py              # "main" module
+├── .env                     # environment file
 ├── alembic.ini              # alembic setting file
 ├── README.md
 ├── DATABASE.md              # Database table
 └── DATABASE_ER_DIAGRAM.dio  # DR diagram
 ```
 
-.env
+### 環境設定ファイル .env
 ```text
+# FastAPIのホスト情報
+FAST_API_HOST="0.0.0.0"
 # DB
 DB_PROTOCOL="postgresql+psycopg2"
 WORKLOAD_SECRET_KEY='YOUR_OWN_RANDOM_GENERATED_SECRET_KEY'
@@ -85,6 +88,8 @@ WORKLOAD_DATABASE_URI='${DB_PROTOCOL}://${WORKLOAD_DB_USER_NAME}:${WORKLOAD_DB_U
 JIRA_URL="your jira url"
 JIRA_WORKLOAD_API_TOKEN="your jira api token"
 JIRA_MANAGER_EMAIL="your email address"
+# WORKLOAD APP
+WORKLOAD_APP_ROOT_USER_EMAIL="your email address"
 ```
 
 

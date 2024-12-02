@@ -9,6 +9,7 @@
 | jira_key | VARCHAR(30) | JIRAのプロジェクトキー |
 | description | TEXT  | プロジェクトの説明 |
 | status | VARCHAR(10) | プロジェクトのステータス |
+| is_target | BOOL | アプリで使用するかどうか |
 | start_date | DATE | 開始日 |
 | limit_date | DATE | 期限日 |
 | end_date | DATE | 終了日 |

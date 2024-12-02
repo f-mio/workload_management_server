@@ -38,14 +38,14 @@ class User(Base):
     __tablename__ = "user"
 
     id: Mapped[bigint_type] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(60))
+    name: Mapped[str] = mapped_column(String(60), index=True, unique=True)
     family_name: Mapped[Optional[str]] = mapped_column(String(30))
     first_name: Mapped[Optional[str]] = mapped_column(String(30))
-    email: Mapped[str] = mapped_column(String(100), nullable=False)
+    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     hashed_password: Mapped[str]
-    is_superuser: Mapped[bool]
+    is_superuser: Mapped[bool] = mapped_column(default=False)
     update_timestamp: Mapped[dt.datetime]
-    create_timestamp: Mapped[dt.datetime]
+    create_timestamp: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
 
 
 class Project(Base):
@@ -54,16 +54,17 @@ class Project(Base):
     """
     __tablename__ = "project"
 
-    id: Mapped[bigint_type] = mapped_column(primary_key=True)
+    id: Mapped[bigint_type] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100))
     jira_key: Mapped[str] = mapped_column(String(30), unique=True)
     description: Mapped[text_type]
     status: Mapped[str] = mapped_column(String(10))
+    is_target: Mapped[bool] = mapped_column(default=False)
     start_date: Mapped[dt.date]
     limit_date: Mapped[dt.date]
     end_date: Mapped[dt.date]
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
-    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False)
+    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
 
 
 class Issue(Base):
@@ -72,7 +73,7 @@ class Issue(Base):
     """
     __tablename__ = "issue"
 
-    id: Mapped[bigint_type] = mapped_column(primary_key=True)
+    id: Mapped[bigint_type] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50))
     project_id: Mapped[bigint_type] = mapped_column(ForeignKey("project.id"))
     parrent_issue_id: Mapped[bigint_type] = mapped_column(ForeignKey("issue.id"))
@@ -83,7 +84,7 @@ class Issue(Base):
     limit_date: Mapped[dt.date]
     end_date: Mapped[dt.date]
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
-    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False)
+    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
 
 
 class Subtask(Base):
@@ -92,13 +93,13 @@ class Subtask(Base):
     """
     __tablename__ = "subtask"
 
-    id: Mapped[bigint_type] = mapped_column(primary_key=True)
+    id: Mapped[bigint_type] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50))
     issue_id: Mapped[bigint_type] = mapped_column(ForeignKey("issue.id"))
     status: Mapped[str] = mapped_column(String(10))
     description: Mapped[text_type]
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
-    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False)
+    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
 
 
 class Workload(Base):
@@ -107,11 +108,11 @@ class Workload(Base):
     """
     __tablename__ = "workload"
 
-    id: Mapped[bigint_type] = mapped_column(primary_key=True)
+    id: Mapped[bigint_type] = mapped_column(primary_key=True, index=True)
     subtask_id: Mapped[bigint_type] = mapped_column(ForeignKey("subtask.id"))
     user_id: Mapped[bigint_type] = mapped_column(ForeignKey("user.id"))
-    work_date: Mapped[dt.date]
+    work_date: Mapped[dt.date] = mapped_column(index=True)
     workload_minute: Mapped[minute_value_type]
     detail: Mapped[text_type]
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
-    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False)
+    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
