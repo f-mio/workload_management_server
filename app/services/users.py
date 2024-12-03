@@ -1,5 +1,6 @@
 # サードパーティ製モジュール
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 # ref
 #   - https://argon2-cffi.readthedocs.io/en/stable/
@@ -50,5 +51,13 @@ def verify_password_and_hashed_one(hashed_password: str, password: str) -> bool:
     ---------
     None
     """
-    is_correct_password: bool = ph.verify(hashed_password, password)
+    try:
+        is_correct_password: bool = ph.verify(hashed_password, password)
+    except VerifyMismatchError:
+        is_correct_password = False
+    except InvalidHashError:
+        is_correct_password = False
+    except Exception as e:
+        raise Exception(e)
+
     return is_correct_password
