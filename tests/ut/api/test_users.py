@@ -79,5 +79,3 @@ class TestFetchUser:
         usersエンドポイントにアクセスすれば全ユーザを取得することができることを確認。
         """
         pass
-
-
