@@ -75,6 +75,9 @@ workload managementはプロジェクトの工数管理を行うためのアプ�
 ```text
 # FastAPIのホスト情報
 FAST_API_HOST="0.0.0.0"
+# シークレットキー
+SECRET_KEY_FOR_JWT_TOKEN="secret key for jwt"
+SECRET_KEY_FOR_CSRF_TOKEN="secret key for csrf token"
 # DB
 DB_PROTOCOL="postgresql+psycopg2"
 WORKLOAD_SECRET_KEY='YOUR_OWN_RANDOM_GENERATED_SECRET_KEY'

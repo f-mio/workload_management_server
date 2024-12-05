@@ -4,6 +4,7 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from starlette_csrf import CSRFMiddleware
 
 # .env記載情報をロード
 load_dotenv()
@@ -11,6 +12,7 @@ load_dotenv()
 # FastAPIインスタンス
 app = FastAPI()
 
+app.add_middleware(CSRFMiddleware, secret=os.getenv('SECRET_KEY_FOR_CSRF_TOKEN'))
 
 # [TODO] デモ
 @app.get("/")
