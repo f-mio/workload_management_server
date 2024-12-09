@@ -40,55 +40,28 @@
 1. 工数情報登録後の編集機能　(登録者と管理者以外は編集不可)
 1. 工数情報登録後の削除機能　(登録者と管理者以外は削除不可)
 
-## 可視化機能
-1. 各
+## [PENDING] 可視化機能
 
-
-
-
-# 画面一覧
-
-## 認証ページ
-- サインアップ
-- サインイン
-
-## 一覧表示ページ
-- プロジェクト, issueの一覧表示
-- 登録　(一覧表示画面で[+]マーク押下するとフォーム出現)
-- [検討中] サブタスクの作成
-
-## 工数表示ページ
-- プロジェクト毎の工数表示
-- 担当者毎のepicレベルの内訳
-
-## 管理者ページ
-- 使用プロジェクト選択画面
-- 管理者権限付与画面 (既存ユーザへ付与するかどうか)
-- ユーザ削除画面
 
 
 # API一覧
 
-## ユーザ
-- サインアップ
-- サインイン
-- ユーザ無効化
-- ユーザ削除
-
-## JIRA関係
-- 各プロジェクトのis_targetを更新
-- ターゲットプロジェクトの取得
-
-
-- プロジェクトに紐づくイシューの取得
-
-
-## 工数登録
-
-
-
-## 管理者用機能
-- ユーザの管理者権限を変更 (rootのみ)
-- プロジェクト一覧の取得 (rootのみ)
-
-
+| エンドポイント | メソッド | 内容 | JWT | CSRF token | remark |
+| --- | :---: | --- | :---: | :---: | --- |
+| /api/csrftoken | GET | CSRF Token発行 | ？ | ？ | - |
+| /api/users/signup | POST | ユーザ登録 | ？ | ？ | - |
+| /api/users/signin | POST | サインイン | O | O | - |
+| /api/users/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
+| /api/jira/update | PUT | Jira情報を使用してDB内Jira issueを更新する | ？ | ？ | - |
+| /api/db/project | GET | 対象プロジェクトの取得 | ？ | ？ | - |
+| /api/db/issue/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - |
+| /api/db/subtask/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
+| /api/db/workload/get/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
+| /api/db/workload/search/ | GET | JSONで渡した検索条件に合う登録工数情報の取得 | ？ | ？ | - |
+| /api/db/workload/{workload_id} | GET | 登録工数情報の取得 | ？ | ？ | - |
+| /api/db/workload/post | POST | 工数登録 | ？ | ？ | - |
+| /api/db/workload/edit/{workload_id} | PUT | 登録工数の編集 | ？ | ？ | - |
+| /api/users/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
+| /api/users/root/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
+| /api/jira/project/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
+| /api/jira/project/all/update | PUT | 対象プロジェクトの取得 (管理者機能) | ？ | ？ | プロジェクトの有効無効の切替 |

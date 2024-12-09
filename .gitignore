@@ -81,3 +81,4 @@ versions/
 node_modules
 
 # others
+.vscode/settings.json
