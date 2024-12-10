@@ -49,9 +49,10 @@
 | エンドポイント | メソッド | 内容 | JWT | CSRF token | remark |
 | --- | :---: | --- | :---: | :---: | --- |
 | /api/csrftoken | GET | CSRF Token発行 | ？ | ？ | - |
-| /api/users/signup | POST | ユーザ登録 | ？ | ？ | - |
-| /api/users/signin | POST | サインイン | O | O | - |
-| /api/users/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
+| /api/user/signup | POST | ユーザ登録 | ？ | ？ | - |
+| /api/user/signin | POST | サインイン | O | O | - |
+| /api/user/logout | POST | ログアウト | ？ | ？ | - |
+| /api/user/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
 | /api/jira/update | PUT | Jira情報を使用してDB内Jira issueを更新する | ？ | ？ | - |
 | /api/db/project | GET | 対象プロジェクトの取得 | ？ | ？ | - |
 | /api/db/issue/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - |
