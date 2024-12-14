@@ -9,7 +9,7 @@ from fastapi_csrf_protect import CsrfProtect
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 import uvicorn
 # プロジェクトモジュール
-from api.current import auth, users
+from api.current import auth, users, projects
 from models.auth import CsrfSettings
 
 # .env記載情報をロード
@@ -25,6 +25,7 @@ CORS_ORIGINS = ['http://localhost:3000']
 # routerの読み込み
 auth_router = auth.router
 # user_router = users.router
+project_router = projects.router
 
 # FastAPIインスタンス
 app = FastAPI()
@@ -37,6 +38,13 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 # app.include_router(user_router)
+app.include_router(project_router)
+
+
+@app.exception_handler(CsrfProtectError)
+def csrf_protect_exception_handler(request: Request, exc: CsrfProtectError):
+  return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+
 
 # [TODO] デモ
 @app.get("/")
@@ -45,13 +53,6 @@ def demo(request: Request, csrf_protect: CsrfProtect = Depends()):
     """
     csrf_token, signed_token = csrf_protect.generate_csrf_tokens()
     return {"a": csrf_token, "b": signed_token}
-
-
-@app.exception_handler(CsrfProtectError)
-def csrf_protect_exception_handler(request: Request, exc: CsrfProtectError):
-  return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
-
-
 
 
 # メイン処理の場合はuvicornを立ち上げる。 ref: https://www.uvicorn.org/#running-programmatically

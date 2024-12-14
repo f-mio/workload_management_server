@@ -54,15 +54,15 @@
 | /api/user/logout | POST | ログアウト | ？ | ？ | - |
 | /api/user/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
 | /api/jira/update | PUT | Jira情報を使用してDB内Jira issueを更新する | ？ | ？ | - |
-| /api/db/project | GET | 対象プロジェクトの取得 | ？ | ？ | - |
-| /api/db/issue/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - |
-| /api/db/subtask/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
-| /api/db/workload/get/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
-| /api/db/workload/search/ | GET | JSONで渡した検索条件に合う登録工数情報の取得 | ？ | ？ | - |
-| /api/db/workload/{workload_id} | GET | 登録工数情報の取得 | ？ | ？ | - |
-| /api/db/workload/post | POST | 工数登録 | ？ | ？ | - |
-| /api/db/workload/edit/{workload_id} | PUT | 登録工数の編集 | ？ | ？ | - |
-| /api/users/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
-| /api/users/root/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
-| /api/jira/project/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
-| /api/jira/project/all/update | PUT | 対象プロジェクトの取得 (管理者機能) | ？ | ？ | プロジェクトの有効無効の切替 |
+| /api/project/db/all | GET | 対象プロジェクトの取得 | ？ | ？ | - |
+| /api/issue/db/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - |
+| /api/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
+| /api/workload/db/get/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
+| /api/workload/db/search/ | GET | JSONで渡した検索条件に合う登録工数情報の取得 | ？ | ？ | - |
+| /api/workload/db/{workload_id} | GET | 登録工数情報の取得 | ？ | ？ | - |
+| /api/workload/db/post | POST | 工数登録 | ？ | ？ | - |
+| /api/workload/db/edit/{workload_id} | PUT | 登録工数の編集 | ？ | ？ | - |
+| /api/user/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
+| /api/user/root/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
+| /api/project/jira/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
+| /api/project/jira/all/update | PUT | 対象プロジェクトの取得 (管理者機能) | ？ | ？ | プロジェクトの有効無効の切替 |
