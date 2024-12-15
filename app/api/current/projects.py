@@ -33,7 +33,7 @@ async def fetch_all_jira_projects(response: Response, csrf_protect: CsrfProtect 
     return projects
 
 
-@router.get("/db/all")
+@router.get("/db/all", response_model=list[ProjectInfoFromDB])
 async def fetch_all_db_project(response: Response, csrf_protect: CsrfProtect = Depends()):
     # [TODO] JWT検証処理を入れる
     projects = fetch_all_projects_from_db()
