@@ -65,4 +65,5 @@
 | /api/user/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
 | /api/user/root/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
 | /api/project/jira/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
-| /api/project/jira/all/update | PUT | 対象プロジェクトの取得 (管理者機能) | ？ | ？ | プロジェクトの有効無効の切替 |
+| /api/project/db/update | PUT | 取得したJSON情報を元にプロジェクト登録もしくは更新 (管理者機能) | ？ | ？ | - |
+| /api/project/db/update/all | GET | Jiraから有効プロジェクトのproject, issue, subtaskを全更新する | ？ | ？ | - |

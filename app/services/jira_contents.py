@@ -5,14 +5,22 @@ import requests
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import insert
+# プロジェクトモジュール
+from db.models import Project, Issue, Subtask
+
 
 # 環境変数の読み込み
-load_dotenv()
+# load_dotenv()
 
 # 環境変数からJIRAのAPIへのアクセス情報を取得
 jira_base_url = os.environ["JIRA_BASE_URL"]
 jira_user = os.environ["JIRA_MANAGER_EMAIL"]
 jira_api_token = os.environ["JIRA_WORKLOAD_API_TOKEN"]
+# SQLAlchemyのエンジン
+engine = create_engine(os.environ["WORKLOAD_DATABASE_URI"])
 
 
 def fetch_all_projects_from_jira() -> list[dict | None]:
@@ -61,7 +69,7 @@ def fetch_all_projects_from_db() -> list[dict | None]:
     pass
 
 
-def register_project_info_to_db(project_info: dict) -> bool:
+def upsert_project_info_into_db(project_info: dict) -> bool:
     """
     DBに登録されているprojectを取得して返却する。
 
@@ -71,16 +79,29 @@ def register_project_info_to_db(project_info: dict) -> bool:
 
     Returns
     -------
-    project_info: dict
-        key: id, name, jira_key, description, is_target
+    message: str
+        成功失敗のメッセージ。
     """
-
-    aaa = ""
-
+    # セッションの作成
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    # 登録用のSQL作成 (https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert)
+    upsert_stmt = insert(Project).values(project_info)\
+            .on_conflict_do_update(
+                index_elements=['id'],
+                set_= {
+                    "name": project_info["name"],
+                    "jira_key": project_info["jira_key"],
+                    "description": project_info["description"],
+                    "is_target": project_info["is_target"],
+                    "update_timestamp": project_info["update_timestamp"],
+            })
     try:
-        # 登録処理
-
-        return True
-
+        # DBへの登録処理
+        session.execute(upsert_stmt)
+        session.commit()
+        session.close()
+        return {"message": "projectの登録に成功しました"}
     except Exception as e:
-        return False
+        session.close()
+        return {"message": f"projectの登録に失敗しました。\nerror message: {e}"}

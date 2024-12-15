@@ -26,4 +26,6 @@ class ProjectForm(BaseModel):
     name: str
     jira_key: str
     description: str | None
-    is_target: bool = False # root userしか変更できない機能
+
+class Response_Message(BaseModel):
+    message: str

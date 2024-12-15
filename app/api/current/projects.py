@@ -1,14 +1,16 @@
 # 標準モジュール
-from typing import Any
+import datetime as dt
 # サードパーティ製モジュール
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi_csrf_protect import CsrfProtect
 # プロジェクトモジュール
 from services.auth import Auth_Utils
-from services.jira_contents import (fetch_all_projects_from_jira,)
+from services.jira_contents import (
+    fetch_all_projects_from_jira, upsert_project_info_into_db)
 from models.jira_contents import (
-    ProjectInfoFromDB, ProjectInfoFromJira, ProjectForm
+    ProjectInfoFromDB, ProjectInfoFromJira, ProjectForm,
+    Response_Message,
 )
 
 
@@ -34,8 +36,21 @@ async def fetch_all_db_project():
     # [TODO] JWT検証処理を入れる
     pass
 
-@router.post("/jira/update", response_model=ProjectInfoFromDB)
-async def upsert_all_project_active_status(project_form: ProjectForm, response: Response, project_info: ProjectInfoFromDB, csrf_protect: CsrfProtect = Depends()):
+
+@router.post("/db/update", response_model=Response_Message)
+async def upsert_all_project_active_status(response: Response, form_value: ProjectForm, csrf_protect: CsrfProtect = Depends()):
     # [TODO] JWT検証処理を入れる
     # [TODO] CSRF検証処理を入れる
+    # データ加工
+    project_info = jsonable_encoder(form_value)
+    project_info["is_target"] = True
+    project_info["update_timestamp"] = dt.datetime.now()
+    # SQLAlchemyを用いた登録処理
+    message = upsert_project_info_into_db(project_info)
+
+    return message
+
+
+@router.post("/db/update/all")
+async def all_update_projects_and_issues():
     pass
