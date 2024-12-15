@@ -7,7 +7,9 @@ from fastapi_csrf_protect import CsrfProtect
 # プロジェクトモジュール
 from services.auth import Auth_Utils
 from services.jira_contents import (
-    fetch_all_projects_from_jira, upsert_project_info_into_db)
+    fetch_all_projects_from_jira, upsert_project_info_into_db,
+    fetch_all_projects_from_db,
+)
 from models.jira_contents import (
     ProjectInfoFromDB, ProjectInfoFromJira, ProjectForm,
     Response_Message,
@@ -32,9 +34,10 @@ async def fetch_all_jira_projects(response: Response, csrf_protect: CsrfProtect 
 
 
 @router.get("/db/all")
-async def fetch_all_db_project():
+async def fetch_all_db_project(response: Response, csrf_protect: CsrfProtect = Depends()):
     # [TODO] JWT検証処理を入れる
-    pass
+    projects = fetch_all_projects_from_db()
+    return projects
 
 
 @router.post("/db/update", response_model=Response_Message)

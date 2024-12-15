@@ -4,8 +4,8 @@ import json
 import requests
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
+# from dotenv import load_dotenv
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
@@ -20,7 +20,7 @@ jira_base_url = os.environ["JIRA_BASE_URL"]
 jira_user = os.environ["JIRA_MANAGER_EMAIL"]
 jira_api_token = os.environ["JIRA_WORKLOAD_API_TOKEN"]
 # SQLAlchemyのエンジン
-engine = create_engine(os.environ["WORKLOAD_DATABASE_URI"])
+workload_db_engine = create_engine(os.environ["WORKLOAD_DATABASE_URI"])
 
 
 def fetch_all_projects_from_jira() -> list[dict | None]:
@@ -66,7 +66,25 @@ def fetch_all_projects_from_db() -> list[dict | None]:
     projects: list[dict]
         key: id, name, jira_key, description, is_target
     """
-    pass
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    # project取得用のSQL作成 (https://docs.sqlalchemy.org/en/20/tutorial/data_select.html#using-select-statements)
+    stmt = select(Project).where(Project.is_target == True).order_by(Project.id)
+    try:
+        # DBからのデータ取得
+        projects_raw = session.execute(stmt).all()
+        session.close()
+        # データの成形
+        projects = [ { "id": info[0].id, "name": info[0].name, "jira_key": info[0].jira_key,
+                       "description": info[0].description, "is_target": info[0].is_target,
+                       "update_timestamp": info[0].update_timestamp,
+                       "create_timestamp": info[0].create_timestamp }
+                     for info in projects_raw ]
+        return projects
+    except Exception as e:
+        session.close()
+        raise Exception(e)
 
 
 def upsert_project_info_into_db(project_info: dict) -> bool:
@@ -83,7 +101,7 @@ def upsert_project_info_into_db(project_info: dict) -> bool:
         成功失敗のメッセージ。
     """
     # セッションの作成
-    Session = sessionmaker(bind=engine)
+    Session = sessionmaker(bind=workload_db_engine)
     session = Session()
     # 登録用のSQL作成 (https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert)
     upsert_stmt = insert(Project).values(project_info)\
