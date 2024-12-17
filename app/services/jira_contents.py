@@ -4,16 +4,12 @@ import json
 import requests
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
-# from dotenv import load_dotenv
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
 from db.models import Project, Issue, Subtask
 
-
-# 環境変数の読み込み
-# load_dotenv()
 
 # 環境変数からJIRAのAPIへのアクセス情報を取得
 jira_base_url = os.environ["JIRA_BASE_URL"]

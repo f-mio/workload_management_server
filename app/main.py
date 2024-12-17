@@ -24,7 +24,7 @@ CORS_ORIGINS = ['http://localhost:3000']
 
 # routerの読み込み
 auth_router = auth.router
-# user_router = users.router
+user_router = users.router
 project_router = projects.router
 
 # FastAPIインスタンス
@@ -37,7 +37,7 @@ app.add_middleware(
    allow_headers=["*"],
 )
 app.include_router(auth_router)
-# app.include_router(user_router)
+app.include_router(user_router)
 app.include_router(project_router)
 
 
