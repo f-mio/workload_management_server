@@ -156,7 +156,6 @@ def verify_user_info_for_login(email: str, password: str) -> str:
         session.close()
         raise Exception("ログイン処理に失敗しました。")
 
-    print(res_from_db)
     user_info = {"id": res_from_db[0].id, "name": res_from_db[0].name, "family_name": res_from_db[0].family_name,
                  "first_name": res_from_db[0].first_name, "email": res_from_db[0].email,
                  "hashed_password": res_from_db[0].hashed_password, "is_superuser": res_from_db[0].is_superuser,
