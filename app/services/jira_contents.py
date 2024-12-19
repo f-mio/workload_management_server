@@ -2,6 +2,7 @@
 import os
 import json
 import requests
+import datetime as dt
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
 from sqlalchemy import create_engine, select
@@ -110,8 +111,8 @@ def upsert_project_info_into_db(project_info: dict) -> bool:
                     "is_target": project_info["is_target"],
                     "update_timestamp": project_info["update_timestamp"],
             })
+    # DBへの登録処理
     try:
-        # DBへの登録処理
         session.execute(upsert_stmt)
         session.commit()
         session.close()
@@ -119,3 +120,86 @@ def upsert_project_info_into_db(project_info: dict) -> bool:
     except Exception as e:
         session.close()
         return {"message": f"projectの登録に失敗しました。\nerror message: {e}"}
+
+def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
+    """
+    Project IDを用いてそれに紐づくissues, subtasksを取得して返却する。
+
+    Attributes
+    ----------
+    project_ids
+
+    Returns
+    -------
+    issues
+    subtasks
+
+    Exception
+    ---------
+    - DB接続失敗
+    - JIRAからの情報取得失敗
+    """
+    # 結果格納用リスト
+    issues = []
+    subtasks = []
+    # API Endpoint
+    auth = HTTPBasicAuth(jira_user, jira_api_token)
+    api_endpoint = f"{jira_base_url}/rest/api/3/search"
+
+
+    for project_id in project_ids:
+        # Jira JQLクエリパラメータ
+        params = { "jql": f"project={project_id}",
+                   "maxResults": 5000,  "startAt": 0, }
+        # リクエストの送信
+        response = requests.get(
+            api_endpoint, headers={ "Accept": "application/json" },
+            params=params, auth=auth )
+
+        # レスポンスの確認
+        if response.status_code != 200:
+            continue
+
+        issue_res = response.json().get("issues", [])
+        if len(issue_res)==0:
+            continue
+
+        # responseを走査して適切なフォーマットでissueとsubtaskに振り分ける
+        for issue in issue_res:
+            issue_name = issue['fields']['summary']
+            issue_id = issue.get("id", None)
+            issue_key = issue.get("key", None)
+            issue_type = issue["fields"]["issuetype"]["name"]
+            issue_description = issue.["fields"].get("description", "")
+            project_id = issue["fields"]["project"].get("id", None) \
+                if ( issue["fields"].get("project") is not None ) \
+                else None
+            parent_id = issue["fields"]["parent"]["id"] \
+                if ( issue["fields"].get("parent") is not None) \
+                else None
+
+            # # [[TODO]]
+            # XXX_date = aaa \
+            #     if ( aaa is not None)\
+            #     else None
+
+            # subtaskかどうかを判定
+            is_subtask = issue["fields"]["issuetype"]["subtask"]
+            if is_subtask:
+                subtasks.append({
+                    "id": issue_id, "jira_key": issue_key, "name": issue_name,
+                    "type": issue_type, "parrent_issue_id": parent_id,
+                    "project_id": project_id, "description": issue_description,
+                    "update_timestamp": dt.datetime.now(),
+                })
+            else:
+                # [[TODO]]
+                issues.append({
+                    "id": issue_id, "jira_key": issue_key,
+                    "type": issue_type, "parrent_issue_id": parent_id,
+                    "project_id": project_id, "description": issue_description,
+                    "update_timestamp": dt.datetime.now(),
+                })
+
+    return [issues, subtasks]
+

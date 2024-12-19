@@ -53,7 +53,6 @@
 | /api/user/signin | POST | サインイン | O | O | - |
 | /api/user/logout | POST | ログアウト | ？ | ？ | - |
 | /api/user/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
-| /api/jira/update | PUT | Jira情報を使用してDB内Jira issueを更新する | ？ | ？ | - |
 | /api/project/db/all | GET | 対象プロジェクトの取得 | ？ | ？ | - |
 | /api/issue/db/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - |
 | /api/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |

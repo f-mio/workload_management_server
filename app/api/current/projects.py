@@ -54,6 +54,9 @@ async def upsert_all_project_active_status(response: Response, form_value: Proje
     return message
 
 
-@router.post("/db/update/all")
+@router.get("/db/update/all")
 async def all_update_projects_and_issues():
+    projects = fetch_all_projects_from_jira()
+    project_ids = [ project["id"] for project in projects ]
+
     pass
