@@ -121,6 +121,7 @@ def upsert_project_info_into_db(project_info: dict) -> bool:
         session.close()
         return {"message": f"projectの登録に失敗しました。\nerror message: {e}"}
 
+
 def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
     """
     Project IDを用いてそれに紐づくissues, subtasksを取得して返却する。
@@ -144,12 +145,12 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
     subtasks = []
     # API Endpoint
     auth = HTTPBasicAuth(jira_user, jira_api_token)
-    api_endpoint = f"{jira_base_url}/rest/api/3/search"
+    api_endpoint = f"{jira_base_url}/rest/api/3/search/jql"
 
 
     for project_id in project_ids:
         # Jira JQLクエリパラメータ
-        params = { "jql": f"project={project_id}",
+        params = { "jql": f"project={project_id}", "fields": "*all",
                    "maxResults": 5000,  "startAt": 0, }
         # リクエストの送信
         response = requests.get(
@@ -170,7 +171,9 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
             issue_id = issue.get("id", None)
             issue_key = issue.get("key", None)
             issue_type = issue["fields"]["issuetype"]["name"]
-            issue_description = issue.["fields"].get("description", "")
+            issue_description = issue["fields"].get("description") \
+                if issue["fields"].get("description") is not None \
+                else ""
             project_id = issue["fields"]["project"].get("id", None) \
                 if ( issue["fields"].get("project") is not None ) \
                 else None
@@ -202,4 +205,3 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
                 })
 
     return [issues, subtasks]
-
