@@ -150,7 +150,8 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
 
     for project_id in project_ids:
         # Jira JQLクエリパラメータ
-        params = { "jql": f"project={project_id}", "fields": "*all",
+        fields = "key,project,parent,status,created,assignee,status,summary,worklog,description,issuetype"
+        params = { "jql": f"project={project_id}", "fields": fields,
                    "maxResults": 5000,  "startAt": 0, }
         # リクエストの送信
         response = requests.get(
@@ -167,41 +168,38 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
 
         # responseを走査して適切なフォーマットでissueとsubtaskに振り分ける
         for issue in issue_res:
-            issue_name = issue['fields']['summary']
+            issue_name = issue["fields"].get("summary")
             issue_id = issue.get("id", None)
-            issue_key = issue.get("key", None)
             issue_type = issue["fields"]["issuetype"]["name"]
             issue_description = issue["fields"].get("description") \
                 if issue["fields"].get("description") is not None \
                 else ""
+            issue_status = issue["fields"]["status"].get("name", "")
             project_id = issue["fields"]["project"].get("id", None) \
                 if ( issue["fields"].get("project") is not None ) \
                 else None
             parent_id = issue["fields"]["parent"]["id"] \
                 if ( issue["fields"].get("parent") is not None) \
                 else None
-
-            # # [[TODO]]
-            # XXX_date = aaa \
-            #     if ( aaa is not None)\
-            #     else None
+            # issue_key = issue.get("key", None)
 
             # subtaskかどうかを判定
             is_subtask = issue["fields"]["issuetype"]["subtask"]
             if is_subtask:
                 subtasks.append({
-                    "id": issue_id, "jira_key": issue_key, "name": issue_name,
-                    "type": issue_type, "parrent_issue_id": parent_id,
-                    "project_id": project_id, "description": issue_description,
+                    "id": issue_id, "name": issue_name,
+                    "issue_id": parent_id, "status": issue_status,
+                    "description": issue_description,
                     "update_timestamp": dt.datetime.now(),
                 })
             else:
-                # [[TODO]]
                 issues.append({
-                    "id": issue_id, "jira_key": issue_key,
-                    "type": issue_type, "parrent_issue_id": parent_id,
-                    "project_id": project_id, "description": issue_description,
+                    "id": issue_id, "name": issue_name,
+                    "project_id": project_id, "parrent_issue_id": parent_id,
+                    "type": issue_type, "status": issue_status,
+                    "description": issue_description,
                     "update_timestamp": dt.datetime.now(),
+
                 })
 
     return [issues, subtasks]
