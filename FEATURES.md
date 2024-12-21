@@ -54,7 +54,7 @@
 | /api/user/logout | POST | ログアウト | ？ | ？ | - |
 | /api/user/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
 | /api/project/db/all | GET | 対象プロジェクトの取得 | ？ | ？ | - |
-| /api/issue/not-subtask/db/all | GET | 対象プロジェクトのsubtask以外の全issue取得 | ？ | ？ | - |
+| /api/issue/main-task/db/all | GET | 対象プロジェクトのsubtask以外の全issue取得 | ？ | ？ | - |
 | /api/issue/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
 | /api/workload/db/get/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
 | /api/workload/db/search/ | GET | JSONで渡した検索条件に合う登録工数情報の取得 | ？ | ？ | - |

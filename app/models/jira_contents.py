@@ -27,5 +27,6 @@ class ProjectForm(BaseModel):
     jira_key: str
     description: str | None
 
+
 class Response_Message(BaseModel):
     message: str

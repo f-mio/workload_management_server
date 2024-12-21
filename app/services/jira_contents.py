@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
-from db.models import Project, Issue, Subtask
+from db.models import Project, Issue
 
 
 # 環境変数からJIRAのAPIへのアクセス情報を取得
@@ -73,18 +73,66 @@ def fetch_all_projects_from_db() -> list[dict | None]:
         projects_raw = session.execute(stmt).all()
         session.close()
         # データの成形
-        projects = [ { "id": info[0].id, "name": info[0].name, "jira_key": info[0].jira_key,
-                       "description": info[0].description, "is_target": info[0].is_target,
-                       "update_timestamp": info[0].update_timestamp,
-                       "create_timestamp": info[0].create_timestamp }
-                     for info in projects_raw ]
+        projects = [
+            { "id": info[0].id, "name": info[0].name, "jira_key": info[0].jira_key,
+              "description": info[0].description, "is_target": info[0].is_target,
+              "update_timestamp": info[0].update_timestamp,
+              "create_timestamp": info[0].create_timestamp }
+            for info in projects_raw ]
         return projects
     except Exception as e:
         session.close()
         raise Exception(e)
 
 
-def upsert_project_info_into_db(project_info: dict) -> bool:
+def generate_projects_for_upsert() -> list[dict]:
+    """
+    DB内のJIRA情報全更新のためのlist[dict]のproject情報を作成する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    projects: list[dict]
+        更新対象のプロジェクト情報
+    """
+    # DBから有効projectを取得
+    projects_from_db = fetch_all_projects_from_db()
+    # Jiraから有効プロジェクト取得
+    auth = HTTPBasicAuth(jira_user, jira_api_token)
+    headers = { "Accept": "application/json" }
+    # レスポンス格納用リスト
+    projects = []
+
+    # DB内の有効projectを走査 (is_target等の情報を格納するため)
+    for project_in_db in projects_from_db:
+        # 有効なIDを取得し、エンドポイントへ値を設定
+        target_id = project_in_db["id"]
+        jira_endpoint = f"{jira_base_url}/rest/api/3/project/{target_id}?expand=description,projectKeys"
+
+        # APIからのデータ取得とデータのデコード
+        response = requests.request(
+            "GET", jira_endpoint, headers=headers, auth=auth )
+        decoded_res = json.loads(response.text)
+
+        project = {
+            "id": decoded_res.get("id"), "name": decoded_res.get("name"),
+            "jira_key": decoded_res.get("key"),
+            "description": decoded_res.get("description"),
+            "is_target": project_in_db["is_target"],
+            "update_timestamp": dt.datetime.now()
+        }
+        project["description"] = modify_description_format(project["description"])
+
+        # レスポンスリストに追加
+        projects.append(project)
+
+    return projects
+
+
+def upsert_project_info_into_db(project_info: dict | list[dict]) -> bool:
     """
     DBに登録されているprojectを取得して返却する。
 
@@ -100,17 +148,17 @@ def upsert_project_info_into_db(project_info: dict) -> bool:
     # セッションの作成
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
+
     # 登録用のSQL作成 (https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert)
-    upsert_stmt = insert(Project).values(project_info)\
-            .on_conflict_do_update(
-                index_elements=['id'],
-                set_= {
-                    "name": project_info["name"],
-                    "jira_key": project_info["jira_key"],
-                    "description": project_info["description"],
-                    "is_target": project_info["is_target"],
-                    "update_timestamp": project_info["update_timestamp"],
-            })
+    insert_stmt = insert(Project).values(project_info)
+    upsert_stmt = insert_stmt.on_conflict_do_update(
+            index_elements=['id'],
+            set_= { "name": insert_stmt.excluded.name,
+                    "jira_key": insert_stmt.excluded.jira_key,
+                    "description": insert_stmt.excluded.description,
+                    "is_target": insert_stmt.excluded.is_target,
+                    "update_timestamp": dt.datetime.now() }
+    )
     # DBへの登録処理
     try:
         session.execute(upsert_stmt)
@@ -119,7 +167,7 @@ def upsert_project_info_into_db(project_info: dict) -> bool:
         return {"message": "projectの登録に成功しました"}
     except Exception as e:
         session.close()
-        return {"message": f"projectの登録に失敗しました。\nerror message: {e}"}
+        raise Exception(e)
 
 
 def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
@@ -142,7 +190,6 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
     """
     # 結果格納用リスト
     issues = []
-    subtasks = []
     # API Endpoint  -->  https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-jql-get
     auth = HTTPBasicAuth(jira_user, jira_api_token)
     api_endpoint = f"{jira_base_url}/rest/api/3/search/jql"
@@ -171,7 +218,7 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
             issue_name = issue["fields"].get("summary")
             issue_id = issue.get("id", None)
             issue_type = issue["fields"]["issuetype"]["name"]
-            issue_description = issue["fields"].get("description") \
+            issue_description = str(issue["fields"].get("description")) \
                 if issue["fields"].get("description") is not None \
                 else ""
             issue_status = issue["fields"]["status"].get("name", "")
@@ -184,10 +231,12 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
                 else None
             is_subtask = issue["fields"]["issuetype"]["subtask"]
             # issue_key = issue.get("key", None)
-
+            # dict型のdescriptionフォーマット修正
+            issue_description = modify_description_format(issue_description)
+            # レスポンス用にissueを追加
             issues.append({
                 "id": issue_id, "name": issue_name,
-                "project_id": project_id, "parrent_issue_id": parent_id,
+                "project_id": project_id, "parent_issue_id": parent_id,
                 "type": issue_type, "is_subtask": is_subtask,
                 "status": issue_status, "limit_date": issue_limit_date,
                 "description": issue_description,
@@ -195,3 +244,63 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
             })
 
     return issues
+
+
+def modify_description_format(description):
+    try:
+        description_dict = json.loads(description.replace("'", '"'))
+        if (isinstance(description_dict, dict)):
+            new_description = ""
+            for idx, content in enumerate(description_dict.get("content", [])):
+                if idx > 0:
+                    new_description += "\n"
+                if isinstance(content, dict):
+                    for inner_content in content.get("content", []):
+                        new_description += inner_content["text"]
+                else:
+                    new_description += content
+        else:
+            new_description = str(description)
+    except Exception:
+        return description
+    
+    return new_description
+
+
+def upsert_jira_issues_into_app_db(issues: list[dict]):
+    """
+    DBに登録されているprojectを取得してDB内のissuesを更新する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    message: str
+        成功失敗のメッセージ。
+    """
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    # 登録用のSQL作成 (https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert)
+    insert_stmt = insert(Issue).values(issues)
+    # idが競合した場合はnameとupdate_timestampを更新 (https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#sqlalchemy.dialects.postgresql.Insert.excluded)
+    upsert_stmt = insert_stmt.on_conflict_do_update(
+        index_elements=['id'],
+        set_={ "name": insert_stmt.excluded.name,
+               "project_id": insert_stmt.excluded.project_id,
+               "parent_issue_id": insert_stmt.excluded.parent_issue_id,
+               "type": insert_stmt.excluded.type,
+               "status": insert_stmt.excluded.status,
+               "limit_date": insert_stmt.excluded.limit_date,
+               "description": insert_stmt.excluded.description,
+               "update_timestamp": dt.datetime.now() }
+    )
+    try:
+        session.execute(upsert_stmt)
+        session.commit()
+        session.close()
+    except Exception as e:
+        session.close()
+        raise Exception(e)

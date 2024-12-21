@@ -69,12 +69,12 @@ class Issue(Base):
 
     id: Mapped[bigint_type] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50))
-    project_id: Mapped[bigint_type] = mapped_column(ForeignKey("project.id"))
-    parrent_issue_id: Mapped[bigint_type] = mapped_column(ForeignKey("issue.id"))
+    project_id: Mapped[bigint_type] = mapped_column(ForeignKey("project.id"), nullable=True)
+    parent_issue_id: Mapped[bigint_type] = mapped_column(ForeignKey("issue.id"), nullable=True)
     type: Mapped[str] = mapped_column(String(10))
     is_subtask: Mapped[bool]
     status: Mapped[str] = mapped_column(String(10))
-    limit_date: Mapped[dt.date]
+    limit_date: Mapped[dt.date] = mapped_column(nullable=True)
     description: Mapped[text_type]
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
     create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
