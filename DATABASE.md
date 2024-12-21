@@ -24,20 +24,7 @@
 | type | VARCHAR(10) | 課題タイプ |
 | description | TEXT | 課題の説明 |
 | status | VARCHAR(10) | 課題のステータス |
-| start_date | DATE | 開始日 |
 | limit_date | DATE | 期限日 |
-| end_date | DATE | 終了日 |
-| update_timestamp | TIMESTAMP | 更新日時 |
-| create_timestamp | TIMESTAMP | 作成日時 |
-
-
-## サブタスク (subtask)
-| カラム名 | 型 | 説明 |
-|---|---|---|
-| name | VARCHAR(100) | 課題名 (sumary) |
-| issue_id | BIGINT | 課題ID (FK) |
-| status | VARCHAR(10) | 課題のステータス |
-| description | TEXT | 課題の説明 |
 | update_timestamp | TIMESTAMP | 更新日時 |
 | create_timestamp | TIMESTAMP | 作成日時 |
 

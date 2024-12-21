@@ -143,14 +143,14 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
     # 結果格納用リスト
     issues = []
     subtasks = []
-    # API Endpoint
+    # API Endpoint  -->  https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-jql-get
     auth = HTTPBasicAuth(jira_user, jira_api_token)
     api_endpoint = f"{jira_base_url}/rest/api/3/search/jql"
 
-
+    # 各project idを走査してissue, subtaskを振り分け
     for project_id in project_ids:
         # Jira JQLクエリパラメータ
-        fields = "key,project,parent,status,created,assignee,status,summary,worklog,description,issuetype"
+        fields = "project,parent,status,created,assignee,status,summary,worklog,description,issuetype,duedate"
         params = { "jql": f"project={project_id}", "fields": fields,
                    "maxResults": 5000,  "startAt": 0, }
         # リクエストの送信
@@ -175,31 +175,23 @@ def fetch_all_issues_related_project_ids_from_jira(project_ids: list):
                 if issue["fields"].get("description") is not None \
                 else ""
             issue_status = issue["fields"]["status"].get("name", "")
+            issue_limit_date = issue["fields"].get("duedate")
             project_id = issue["fields"]["project"].get("id", None) \
                 if ( issue["fields"].get("project") is not None ) \
                 else None
             parent_id = issue["fields"]["parent"]["id"] \
                 if ( issue["fields"].get("parent") is not None) \
                 else None
+            is_subtask = issue["fields"]["issuetype"]["subtask"]
             # issue_key = issue.get("key", None)
 
-            # subtaskかどうかを判定
-            is_subtask = issue["fields"]["issuetype"]["subtask"]
-            if is_subtask:
-                subtasks.append({
-                    "id": issue_id, "name": issue_name,
-                    "issue_id": parent_id, "status": issue_status,
-                    "description": issue_description,
-                    "update_timestamp": dt.datetime.now(),
-                })
-            else:
-                issues.append({
-                    "id": issue_id, "name": issue_name,
-                    "project_id": project_id, "parrent_issue_id": parent_id,
-                    "type": issue_type, "status": issue_status,
-                    "description": issue_description,
-                    "update_timestamp": dt.datetime.now(),
+            issues.append({
+                "id": issue_id, "name": issue_name,
+                "project_id": project_id, "parrent_issue_id": parent_id,
+                "type": issue_type, "is_subtask": is_subtask,
+                "status": issue_status, "limit_date": issue_limit_date,
+                "description": issue_description,
+                "update_timestamp": dt.datetime.now(),
+            })
 
-                })
-
-    return [issues, subtasks]
+    return issues

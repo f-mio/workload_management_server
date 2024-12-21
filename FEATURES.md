@@ -54,8 +54,8 @@
 | /api/user/logout | POST | ログアウト | ？ | ？ | - |
 | /api/user/invalid/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
 | /api/project/db/all | GET | 対象プロジェクトの取得 | ？ | ？ | - |
-| /api/issue/db/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - |
-| /api/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
+| /api/issue/not-subtask/db/all | GET | 対象プロジェクトのsubtask以外の全issue取得 | ？ | ？ | - |
+| /api/issue/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
 | /api/workload/db/get/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
 | /api/workload/db/search/ | GET | JSONで渡した検索条件に合う登録工数情報の取得 | ？ | ？ | - |
 | /api/workload/db/{workload_id} | GET | 登録工数情報の取得 | ？ | ？ | - |
@@ -66,3 +66,5 @@
 | /api/project/jira/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
 | /api/project/db/update | PUT | 取得したJSON情報を元にプロジェクト登録もしくは更新 (管理者機能) | ？ | ？ | - |
 | /api/project/db/update/all | GET | Jiraから有効プロジェクトのproject, issue, subtaskを全更新する | ？ | ？ | - |
+<!-- | /api/issue/db/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - | -->
+
