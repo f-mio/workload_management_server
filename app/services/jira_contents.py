@@ -132,7 +132,7 @@ def generate_projects_for_upsert() -> list[dict]:
     return projects
 
 
-def upsert_project_info_into_db(project_info: dict | list[dict]) -> bool:
+def upsert_jira_project_info_into_db(project_info: dict | list[dict]) -> bool:
     """
     DBに登録されているprojectを取得して返却する。
 
