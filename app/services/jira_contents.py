@@ -134,7 +134,7 @@ def generate_projects_for_upsert() -> list[dict]:
 
 def upsert_jira_project_info_into_db(project_info: dict | list[dict]) -> bool:
     """
-    DBに登録されているprojectを取得して返却する。
+    project情報をDBにupsertする。
 
     Attributes
     ----------
@@ -301,6 +301,88 @@ def upsert_jira_issues_into_app_db(issues: list[dict]):
         session.execute(upsert_stmt)
         session.commit()
         session.close()
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+
+def fetch_all_main_issues_from_db() -> list[dict]:
+    """
+    DBに登録されているsubtask以外のissueを取得して返却する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    projects: list[dict]
+        key: id, name, project_id, parent_issue_id, type,
+             is_subtask, status, limit_date, description,
+             update_timestamp, create_timestamp
+    """
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    # 取得用のSQL作成
+    stmt = select(Issue).where(Issue.is_subtask == False)\
+            .order_by(Issue.project_id, Issue.parent_issue_id, Issue.id)
+    try:
+        # DBからのデータ取得
+        issues_raw = session.execute(stmt).all()
+        session.close()
+        # データの成形
+        issues = [
+            { "id": info[0].id, "name": info[0].name, "project_id": info[0].project_id,
+              "parent_issue_id": info[0].parent_issue_id, "type": info[0].type,
+              "is_subtask": info[0].is_subtask, "status": info[0].status,
+              "limit_date": info[0].limit_date, "description": info[0].description,
+              "update_timestamp": info[0].update_timestamp,
+              "create_timestamp": info[0].create_timestamp }
+            for info in issues_raw ]
+
+        return issues
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+
+def fetch_all_subtasks_from_db() -> list[dict]:
+    """
+    DBに登録されているsubtaskを取得して返却する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    projects: list[dict]
+        key: id, name, project_id, parent_issue_id, type,
+             is_subtask, status, limit_date, description,
+             update_timestamp, create_timestamp
+    """
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    # 取得用のSQL作成
+    stmt = select(Issue).where(Issue.is_subtask == True)\
+            .order_by(Issue.project_id, Issue.parent_issue_id, Issue.id)
+    try:
+        # DBからのデータ取得
+        subtasks_raw = session.execute(stmt).all()
+        session.close()
+        # データの成形
+        subtasks = [
+            { "id": info[0].id, "name": info[0].name, "project_id": info[0].project_id,
+              "parent_issue_id": info[0].parent_issue_id, "type": info[0].type,
+              "is_subtask": info[0].is_subtask, "status": info[0].status,
+              "limit_date": info[0].limit_date, "description": info[0].description,
+              "update_timestamp": info[0].update_timestamp,
+              "create_timestamp": info[0].create_timestamp }
+            for info in subtasks_raw ]
+
+        return subtasks
     except Exception as e:
         session.close()
         raise Exception(e)

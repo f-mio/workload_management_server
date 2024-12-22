@@ -9,7 +9,7 @@ from fastapi_csrf_protect import CsrfProtect
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 import uvicorn
 # プロジェクトモジュール
-from api.current import auth, users, projects
+from api.current import auth, users, projects, issues
 from models.auth import CsrfSettings
 
 # .env記載情報をロード
@@ -26,6 +26,7 @@ CORS_ORIGINS = ['http://localhost:3000']
 auth_router = auth.router
 user_router = users.router
 project_router = projects.router
+issue_router = issues.router
 
 # FastAPIインスタンス
 app = FastAPI()
@@ -39,6 +40,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(project_router)
+app.include_router(issue_router)
 
 
 @app.exception_handler(CsrfProtectError)

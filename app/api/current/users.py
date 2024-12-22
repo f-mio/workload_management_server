@@ -37,3 +37,29 @@ async def user_signin(request: Request, login_form_value: LoginForm, response: R
     user_info = verify_user_info_for_login(form_value["email"], form_value["password"])
 
     return user_info
+
+
+
+@router.get("/api/user/logout")
+def logout_user_account():
+    pass
+
+
+@router.get("/api/user/deactivate")
+def deactivate_user_account():
+    pass
+
+
+@router.get("/api/user/root/delete")
+def delete_user_account_from_db(user_id: int):
+    pass
+
+
+@router.get("/api/user/root/activate")
+def activate_user_account(user_id: int):
+    pass
+
+
+@router.get("/api/user/root/permission")
+def grant_root_permission(user_id: int):
+    pass

@@ -61,11 +61,11 @@
 | /api/workload/db/{workload_id} | GET | 登録工数情報の取得 | ？ | ？ | - |
 | /api/workload/db/post | POST | 工数登録 | ？ | ？ | - |
 | /api/workload/db/edit/{workload_id} | PUT | 登録工数の編集 | ？ | ？ | - |
-| /api/user/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
-| /api/user/root/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
-| /api/project/jira/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
-| /api/user/activate/{user_id} | POST | 無効ユーザの有効化 (管理者機能) | ？ | ？ | - |
-| /api/project/db/update | PUT | 取得したJSON情報を元にプロジェクト登録もしくは更新 (管理者機能) | ？ | ？ | - |
+| /api/user/root/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
+| /api/user/root/permission/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
+| /api/project/root/jira/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |
+| /api/user/root/activate/{user_id} | POST | 無効ユーザの有効化 (管理者機能) | ？ | ？ | - |
+| /api/project/root/db/update | PUT | 取得したJSON情報を元にプロジェクト登録もしくは更新 (管理者機能) | ？ | ？ | - |
 | /api/project/db/update/all | GET | Jiraから有効プロジェクトのproject, issue, subtaskを全更新する | ？ | ？ | - |
 <!-- | /api/issue/db/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - | -->
 
