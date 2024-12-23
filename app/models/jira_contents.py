@@ -40,7 +40,3 @@ class IssueInfoFromDB(BaseModel):
     description: str | None
     update_timestamp: dt.datetime
     create_timestamp: dt.datetime
-
-
-class Response_Message(BaseModel):
-    message: str

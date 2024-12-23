@@ -7,7 +7,7 @@ from services.auth import Auth_Utils
 from services.users import (
     convert_password_to_hashed_one, verify_password_and_hashed_one,
     insert_new_user_into_app_db, verify_user_info_for_login )
-from models.auth import CsrfType, SuccessMessage
+from models.auth import CsrfType, ResponseMessage
 from models.users import UserInfo, UserFormBody, LoginForm
 
 
@@ -16,9 +16,11 @@ router = APIRouter(prefix="/api/user")
 auth = Auth_Utils()
 
 
-# サインアップ用エンドポイント
-@router.post("/signup", response_model=SuccessMessage)
-async def user_signup(request: Request, user_form_value: UserFormBody, csrf_protect: CsrfProtect = Depends()):
+@router.post("/signup", response_model=ResponseMessage)
+async def api_user_signup(request: Request, user_form_value: UserFormBody, csrf_protect: CsrfProtect = Depends()):
+    """
+    サインアップ用エンドポイント
+    """
     # CSRF Token検証処理
     # csrf_token = csrf_protect.get_csrf_from_headers(request.headers)
     # csrf_protect.validate_csrf(csrf_token)
@@ -31,8 +33,10 @@ async def user_signup(request: Request, user_form_value: UserFormBody, csrf_prot
 
 # サインイン用エンドポイント
 @router.post("/signin", response_model=UserInfo)
-async def user_signin(request: Request, login_form_value: LoginForm, response: Response):
-
+async def api_user_signin(request: Request, login_form_value: LoginForm, response: Response):
+    """
+    サインイン用エンドポイント
+    """
     form_value = jsonable_encoder(login_form_value)
     user_info = verify_user_info_for_login(form_value["email"], form_value["password"])
 
@@ -40,26 +44,26 @@ async def user_signin(request: Request, login_form_value: LoginForm, response: R
 
 
 
-@router.get("/api/user/logout")
-def logout_user_account():
+@router.get("/logout", response_model=ResponseMessage)
+def api_logout_user_account():
     pass
 
 
-@router.get("/api/user/deactivate")
-def deactivate_user_account():
+@router.get("/deactivate", response_model=ResponseMessage)
+def api_deactivate_user_account():
     pass
 
 
-@router.get("/api/user/root/delete")
-def delete_user_account_from_db(user_id: int):
+@router.get("/root/delete", response_model=ResponseMessage)
+def api_delete_user_account_from_db(user_id: int):
     pass
 
 
-@router.get("/api/user/root/activate")
-def activate_user_account(user_id: int):
+@router.get("/root/activate", response_model=ResponseMessage)
+def api_activate_user_account(user_id: int):
     pass
 
 
-@router.get("/api/user/root/permission")
-def grant_root_permission(user_id: int):
+@router.get("/root/permission", response_model=ResponseMessage)
+def api_grant_root_permission(user_id: int):
     pass

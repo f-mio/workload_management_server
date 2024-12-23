@@ -9,7 +9,8 @@ from fastapi_csrf_protect import CsrfProtect
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 import uvicorn
 # プロジェクトモジュール
-from api.current import auth, users, projects, issues
+from api.current import (
+    auth, users, projects, issues, workloads)
 from models.auth import CsrfSettings
 
 # .env記載情報をロード
@@ -27,6 +28,7 @@ auth_router = auth.router
 user_router = users.router
 project_router = projects.router
 issue_router = issues.router
+workload_router = workloads.router
 
 # FastAPIインスタンス
 app = FastAPI()
@@ -41,6 +43,7 @@ app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(project_router)
 app.include_router(issue_router)
+app.include_router(workload_router)
 
 
 @app.exception_handler(CsrfProtectError)

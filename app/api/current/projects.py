@@ -12,9 +12,9 @@ from services.jira_contents import (
     fetch_all_projects_from_db, generate_projects_for_upsert,
     upsert_jira_project_info_into_db, upsert_jira_issues_into_app_db,
 )
+from models.auth import ResponseMessage
 from models.jira_contents import (
     ProjectInfoFromDB, ProjectInfoFromJira, ProjectForm,
-    Response_Message, 
 )
 
 
@@ -22,7 +22,7 @@ from models.jira_contents import (
 router = APIRouter(prefix="/api/project")
 
 
-@router.get("/db/update/all", response_model=Response_Message)
+@router.get("/db/update/all", response_model=ResponseMessage)
 async def api_update_all_projects_and_issues():
     """
     Jira情報を使用して、DB内のJira情報を全更新するエンドポイント
@@ -69,7 +69,7 @@ async def api_fetch_all_db_project(response: Response, csrf_protect: CsrfProtect
     return projects
 
 
-@router.post("/root/db/update", response_model=Response_Message)
+@router.post("/root/db/update", response_model=ResponseMessage)
 async def api_upsert_project_active_status(response: Response, form_value: ProjectForm, csrf_protect: CsrfProtect = Depends()):
     """
     Jira情報を使用して、DB内のprojectの有効無効を切り替える
