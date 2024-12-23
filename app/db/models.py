@@ -56,7 +56,7 @@ class Project(Base):
     name: Mapped[str] = mapped_column(String(100))
     jira_key: Mapped[str] = mapped_column(String(30), unique=True)
     description: Mapped[text_type]
-    is_target: Mapped[bool] = mapped_column(default=False)
+    is_target: Mapped[bool] = mapped_column(default=True)
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
     create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
 
