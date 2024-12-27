@@ -56,11 +56,11 @@
 | /api/project/db/all | GET | 対象プロジェクトの取得 | ？ | ？ | - |
 | /api/issue/main-task/db/all | GET | 対象プロジェクトのsubtask以外の全issue取得 | ？ | ？ | - |
 | /api/issue/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |
-| /api/workload/db/get/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
 | /api/workload/db/search/ | GET | JSONで渡した検索条件に合う登録工数情報の取得 | ？ | ？ | - |
 | /api/workload/db/{workload_id} | GET | 登録工数情報の取得 | ？ | ？ | - |
 | /api/workload/db/post | POST | 工数登録 | ？ | ？ | - |
-| /api/workload/db/edit/{workload_id} | PUT | 登録工数の編集 | ？ | ？ | - |
+| /api/workload/db/update/ | PUT | 登録工数の編集 | ？ | ？ | - |
+| /api/workload/db/user/{user_id} | GET | 特定ユーザの登録工数情報取得 | ？ | ？ | - |
 | /api/user/root/delete/{user_id} | POST | ユーザ削除 (管理者機能) | ？ | ？ | - |
 | /api/user/root/permission/{user_id} | POST | ユーザへの管理者権限 (管理者機能) | ？ | ？ | - |
 | /api/project/root/jira/all | GET | 全プロジェクト取得 (管理者機能) | ？ | ？ | APIユーザ権限内の全プロジェクト |

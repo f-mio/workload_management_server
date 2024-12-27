@@ -48,3 +48,61 @@ def insert_workload_info_into_db(workload_info: dict) -> dict:
     except Exception as e:
         session.close()
         raise Exception(e)
+
+
+def fetch_specify_user_workloads_from_db(
+        user_id: int, lower_date: dt.date | None = None,
+        upper_date: dt.date | None = None) -> list[dict]:
+    """
+    user_idに紐づく工数を取得
+
+    Attributes
+    ----------
+    user_id: int
+        ユーザID
+    range_days: int
+        本日から取得期間 (デフォルト値: 365日)
+    upper_date: dt.date
+        取得日時
+
+    Returns
+    -------
+    workloads: list[dict]
+        user_idが持つ工数情報
+
+    Exception
+    ---------
+    - DB接続失敗
+    """
+    # 期間が未指定の場合365日を設定
+    if lower_date is None:
+        lower_date = dt.date.today() - dt.timedelta(days=365)
+    if upper_date is None:
+        upper_date = dt.date.today()
+
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+
+    stmt = select(Workload)\
+            .where(
+                Workload.user_id == user_id,
+                Workload.work_date >= lower_date,
+                Workload.work_date <= upper_date) \
+            .order_by(Workload.work_date, Workload.id)
+ 
+    try:
+        db_res = session.execute(stmt).all()
+        workloads = [ {"id": info[0].id,
+                       "subtask_id": info[0].subtask_id, "user_id": info[0].user_id,
+                       "work_date": info[0].work_date, "workload_minute": info[0].workload_minute,
+                       "detail": info[0].detail,
+                       "update_timestamp": info[0].update_timestamp, "create_timestamp": info[0].create_timestamp,
+                      }
+                      for info in db_res
+                    ]
+        session.close()
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+    return workloads
