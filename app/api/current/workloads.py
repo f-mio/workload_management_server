@@ -7,7 +7,8 @@ from fastapi_csrf_protect import CsrfProtect
 # プロジェクトモジュール
 from services.auth import Auth_Utils
 from services.workload import (
-    insert_workload_info_into_db, fetch_specify_user_workloads_from_db
+    insert_workload_info_into_db, fetch_specify_workload,
+    fetch_specify_user_workloads_from_db,
 )
 from models.auth import CsrfType, ResponseMessage
 from models.workloads import WorkloadInfoFromDB, WorkloadForm
@@ -23,7 +24,8 @@ def api_fetch_workload_using_workload_id(workload_id: int):
     """
     idを指定した工数情報レコードの取得
     """
-    pass
+    workload = fetch_specify_workload(workload_id)
+    return workload
 
 
 @router.post("/db/post", response_model=ResponseMessage)
@@ -49,6 +51,9 @@ def api_update_workload(workload_info: WorkloadForm):
     """
     登録工数の編集
     """
+    # [TODO] JWT検証処理を入れる
+    # [TODO] CSRF検証処理を入れる
+    # [TODO] rootユーザかどうかの判定
     pass
 
 

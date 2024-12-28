@@ -50,6 +50,52 @@ def insert_workload_info_into_db(workload_info: dict) -> dict:
         raise Exception(e)
 
 
+def fetch_specify_workload(workload_id: int) -> dict:
+    """
+    指定されたIDの工数情報を取得する。
+
+    Attributes
+    ----------
+    workload_id: int
+        工数登録情報ID
+
+    Returns
+    -------
+    workload: dict
+        ID指定した工数情報
+
+    Exception
+    ---------
+    - DB接続失敗
+    """
+
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    stmt = select(Workload).\
+            where(Workload.id == workload_id)
+
+    try:
+        workload_obj = session.execute(stmt).first()
+
+        # IDが存在しない場合
+        if workload_obj is None:
+            raise Exception("無効な工数情報IDが指定されました。")
+
+        workload = { "id": workload_obj[0].id,
+                     "subtask_id": workload_obj[0].subtask_id,
+                     "user_id": workload_obj[0].user_id,
+                     "work_date": workload_obj[0].work_date,
+                     "workload_minute": workload_obj[0].workload_minute,
+                     "detail": workload_obj[0].detail,
+                     "update_timestamp": workload_obj[0].update_timestamp,
+                     "create_timestamp": workload_obj[0].create_timestamp, }
+        session.close()
+        return workload
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+
 def fetch_specify_user_workloads_from_db(
         user_id: int, lower_date: dt.date | None = None,
         upper_date: dt.date | None = None) -> list[dict]:
