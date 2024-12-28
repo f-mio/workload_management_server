@@ -5,7 +5,7 @@ import requests
 import datetime as dt
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
@@ -94,6 +94,53 @@ def fetch_specify_workload(workload_id: int) -> dict:
     except Exception as e:
         session.close()
         raise Exception(e)
+
+
+def update_specify_workload(workload_id: int , form_value: dict) -> dict:
+    """
+    指定したIDの工数情報をフォームで登録した内容で修正する。
+
+    Attributes
+    ----------
+    workload_id: int
+        登録済み工数情報のID
+    form_value: dict
+        フォームで入力した修正内容
+
+    Returns
+    -------
+    message: dict
+
+    Exception
+    ---------
+    None
+    """
+
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    check_stmt = select(Workload.id).where(Workload.id == workload_id)
+    update_stmt = update(Workload)\
+            .where(Workload.id == workload_id)\
+            .values( subtask_id = form_value["subtask_id"],
+                     user_id = form_value["user_id"],
+                     work_date = form_value["work_date"],
+                     workload_minute = form_value["workload_minute"],
+                     detail = form_value["detail"],
+                     update_timestamp = dt.datetime.now() )
+
+    try:
+        # 存在するIDかどうかを確認。
+        check_data = session.execute(check_stmt).first()
+        if check_data is None:
+            raise Exception(f"工数情報ID {workload_id}は登録されていません。\nIDを確認してください。")
+        # updateの実行
+        session.execute(update_stmt)
+        session.commit()
+        session.close()
+        return {"message": "工数情報を修正しました。"}
+    except Exception as e:
+        session.close()
+        return {"message": f"工数情報修正に失敗しました。\nerror message: {e}"}
 
 
 def fetch_specify_user_workloads_from_db(

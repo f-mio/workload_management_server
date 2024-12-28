@@ -67,5 +67,3 @@
 | /api/user/root/activate/{user_id} | POST | 無効ユーザの有効化 (管理者機能) | ？ | ？ | - |
 | /api/project/root/db/update | PUT | 取得したJSON情報を元にプロジェクト登録もしくは更新 (管理者機能) | ？ | ？ | - |
 | /api/project/db/update/all | GET | Jiraから有効プロジェクトのproject, issue, subtaskを全更新する | ？ | ？ | - |
-<!-- | /api/issue/db/all | GET | 対象プロジェクトの全issue取得 | ？ | ？ | - | -->
-
