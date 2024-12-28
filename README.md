@@ -55,13 +55,12 @@ workload managementはプロジェクトの工数管理を行うためのアプ�
 │   │   │   ├── script.py.mako
 │   │   │   └── versions/
 │   │   │       └── ... ...
-│   │   ├── models/          # DB models
-│   │   │   ├── users.py     # user table definition
-│   │   │   ├── projects.py  # project table definition
-│   │   │   ├── issues.py    # issues table definition
-│   │   │   ├── subtasks.py  # subtask table definition
-│   │   │   └── workloads.py # workload table definition
-│   │   └── database.py      # workload table definition
+│   │   └── models/          # DB models
+│   │       ├── users.py     # user table definition
+│   │       ├── projects.py  # project table definition
+│   │       ├── issues.py    # issues table definition
+│   │       ├── subtasks.py  # subtask table definition
+│   │       └── workloads.py # workload table definition
 │   ├── config.py
 │   └── main.py              # "main" module
 ├── .env                     # environment file
