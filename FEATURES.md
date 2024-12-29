@@ -53,6 +53,7 @@
 | /api/user/signin | POST | サインイン | O | O | - |
 | /api/user/logout | POST | ログアウト | ？ | ？ | - |
 | /api/user/deactivate/{user_id} | POST | ユーザ無効化 | ？ | ？ | - |
+| /api/user/active/all | POST | 有効なユーザ一覧を取得 | ？ | ？ | - |
 | /api/project/db/all | GET | 対象プロジェクトの取得 | ？ | ？ | - |
 | /api/issue/main-task/db/all | GET | 対象プロジェクトのsubtask以外の全issue取得 | ？ | ？ | - |
 | /api/issue/subtask/db/all | GET | 対象プロジェクトの全subtask取得 | ？ | ？ | - |

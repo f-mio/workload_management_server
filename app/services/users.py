@@ -166,3 +166,36 @@ def verify_user_info_for_login(email: str, password: str) -> str:
         raise Exception("パスワードが違います。")
 
     return user_info
+
+
+def fetch_active_user_list():
+    """
+    有効なユーザ一覧を返却する
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    users: list[dict]
+        有効なユーザ情報
+
+    Exceptions
+    ----------
+    - DBからのデータ取得に失敗した場合
+    """
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    stmt = select(User.id, User.name)\
+            .where(User.is_active == True)
+
+    try:
+        res = session.execute(stmt).all()
+        users = [ {"id": user_res[0], "name": user_res[1]}
+                for user_res in res]
+        session.close()
+        return users
+    except Exception as e:
+        session.close()
+        raise Exception(e)

@@ -14,9 +14,10 @@ workload managementはプロジェクトの工数管理を行うためのアプ�
 
 ## 使用技術 (現時点で使用予定のものを記載)
 ### サーバ
-![FastAPI](https://img.shields.io/badge/FastAPI-XX.X-blue)
-![Pytest](https://img.shields.io/badge/Pytest-XX.X-blue)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-XX.X-blue)
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115.5-blue)
+![Pytest](https://img.shields.io/badge/Pytest-8.3.3-blue)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0.36-blue)
 
 ### DataBase
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.8-blue)
@@ -108,10 +109,29 @@ $ cd /path/to/project_dir/
 $ pip install -r requirements.txt
 ```
 
-
 ## migrate
-
 ```bash
 $ alembic revision --autogenerate
 $ alembic upgrade head
+```
+
+
+# 利用に関して
+
+## 日本語版
+```text
+本ソフトウェアは、私的利用に限り、無償で使用することができます。  
+商用目的での使用、または商業的な価値を生む活動に使用する場合は、事前に開発者（[f-mio](https://github.com/f-mio)）の許可を得る必要があります。  
+本ソフトウェアの改変や再配布は、開発者の許可を得た場合にのみ可能です。  
+
+本ソフトウェアの使用により生じたいかなる損害や問題についても、開発者は一切の責任を負いません。
+```
+
+## English version
+```text
+This software may be used free of charge for personal use only.  
+For any commercial use, or activities generating commercial value, prior permission must be obtained from the developer ([f-mio](https://github.com/f-mio)).  
+Modification or redistribution of this software is permitted only with the developer's approval.  
+
+The developer assumes no responsibility for any damages or issues caused by the use of this software.
 ```

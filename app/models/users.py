@@ -22,6 +22,11 @@ class UserInfo(BaseModel):
     create_timestamp: dt.datetime
 
 
+class UserListModel(BaseModel):
+    id: int
+    name: str
+
+
 class UserFormBody(BaseModel):
     name: str
     family_name: str

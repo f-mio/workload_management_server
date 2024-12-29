@@ -42,6 +42,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     hashed_password: Mapped[str]
     is_superuser: Mapped[bool] = mapped_column(default=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
     update_timestamp: Mapped[dt.datetime]
     create_timestamp: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
 

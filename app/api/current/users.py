@@ -6,9 +6,10 @@ from fastapi_csrf_protect import CsrfProtect
 from services.auth import Auth_Utils
 from services.users import (
     convert_password_to_hashed_one, verify_password_and_hashed_one,
+    fetch_active_user_list,
     insert_new_user_into_app_db, verify_user_info_for_login )
 from models.auth import CsrfType, ResponseMessage
-from models.users import UserInfo, UserFormBody, LoginForm
+from models.users import UserInfo, UserFormBody, LoginForm, UserListModel
 
 
 # 初期化処理
@@ -42,6 +43,12 @@ async def api_user_signin(request: Request, login_form_value: LoginForm, respons
 
     return user_info
 
+
+# 有効なユーザ一覧を返却するエンドポイント
+@router.get("/active/all", response_model=list[UserListModel])
+async def api_fetch_active_user_list(request: Request, response: Response):
+    user_list = fetch_active_user_list()
+    return user_list
 
 
 @router.get("/logout", response_model=ResponseMessage)

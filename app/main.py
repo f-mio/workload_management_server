@@ -13,6 +13,7 @@ from api.current import (
     auth, users, projects, issues, workloads)
 from models.auth import CsrfSettings
 
+
 # .env記載情報をロード
 load_dotenv()
 
