@@ -1,13 +1,14 @@
 # サードパーティ製モジュール
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request
 from fastapi_csrf_protect import CsrfProtect
 # プロジェクトモジュール
 from services.auth import Auth_Utils
+from services.users import (fetch_user_using_specify_email, )
 from models.auth import CsrfType
-
+from models.users import UserInfo
 
 router = APIRouter(
-    prefix="/api"
+    prefix="/api/auth"
 )
 auth = Auth_Utils()
 
@@ -23,3 +24,10 @@ async def get_csrf_token(response: Response, csrf_protect: CsrfProtect = Depends
     )
     res = { "csrf_token": csrf_token }
     return res
+
+
+@router.get("/verify_jwt", response_model=UserInfo)
+async def verify_jwt_token(request: Request):
+    email = auth.verify_jwt(request)
+    user_info = fetch_user_using_specify_email(email)
+    return user_info

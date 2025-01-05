@@ -18,7 +18,7 @@ auth = Auth_Utils()
 
 
 @router.post("/signup", response_model=ResponseMessage)
-async def api_user_signup(request: Request, user_form_value: UserFormBody, csrf_protect: CsrfProtect = Depends()):
+async def api_user_signup(request: Request, user_form_value: UserFormBody, response: Response, csrf_protect: CsrfProtect = Depends()):
     """
     サインアップ用エンドポイント
     """
@@ -28,7 +28,10 @@ async def api_user_signup(request: Request, user_form_value: UserFormBody, csrf_
     # フロントからの情報のデコード (Pydanticモデル → JSON)
     new_user = jsonable_encoder(user_form_value)
     # DB登録処理
-    message = insert_new_user_into_app_db(new_user)
+    message, jwt_token = insert_new_user_into_app_db(new_user)
+    response.set_cookie(
+        key="access_token", value=f"Bearer {jwt_token}", httponly=True, samesite="none", secure=True)
+
     return message
 
 
@@ -39,7 +42,9 @@ async def api_user_signin(request: Request, login_form_value: LoginForm, respons
     サインイン用エンドポイント
     """
     form_value = jsonable_encoder(login_form_value)
-    user_info = verify_user_info_for_login(form_value["email"], form_value["password"])
+    user_info, jwt_token = verify_user_info_for_login(form_value["email"], form_value["password"])
+    response.set_cookie(
+        key="access_token", value=f"Bearer {jwt_token}", httponly=True, samesite="none", secure=True)
 
     return user_info
 

@@ -9,12 +9,15 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
 # プロジェクトモジュール
 from db.models import User
+from services.auth import Auth_Utils
 
 # ref
 #   - https://argon2-cffi.readthedocs.io/en/stable/
 
 # パスワードハッシャーのインスタンス化
 ph = PasswordHasher()
+# Auth_Utilsのインスタンス化
+auth = Auth_Utils()
 
 # sql alchemyのエンジン作成
 workload_db_engine = create_engine(os.environ["WORKLOAD_DATABASE_URI"])
@@ -74,7 +77,7 @@ def verify_password_and_hashed_one(hashed_password: str, password: str) -> bool:
     return is_correct_password
 
 
-def insert_new_user_into_app_db(user_info: dict) -> dict:
+def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
     """
     ユーザ登録処理
 
@@ -87,16 +90,16 @@ def insert_new_user_into_app_db(user_info: dict) -> dict:
     -------
     message: dict
         サインアップ処理の成功失敗をメッセージで返却する。 (key: message)
+    jwt_token: str
+        JWT Token
 
     Exceptions
     ----------
     - 登録済みのemailが存在する場合
-    - パスワードが脆弱な場合
+    - [TODO] パスワードが脆弱な場合
     """
     # 必要情報の取り出し
     name = user_info.get("name")
-    # family_name = user_info.get("family_name")
-    # first_name = user_info.get("first_name")
     email = user_info.get("email")
 
     # name, emailがNoneでないことを確認する
@@ -139,33 +142,67 @@ def insert_new_user_into_app_db(user_info: dict) -> dict:
         raise Exception(f"ユーザ登録に失敗しました。\nerror message: {e}")
 
     res_message = {"message": "ユーザ登録に成功しました"}
-    return res_message
+
+    jwt_token = auth.encode_jwt(res_from_db.email)
+
+    return res_message, jwt_token
 
 
-def verify_user_info_for_login(email: str, password: str) -> str:
+def verify_user_info_for_login(email: str, password: str) -> list[dict, str]:
     """
     ログイン処理
+
+    Attributes
+    ----------
+    email: str
+    password: str
+
+    Returns
+    -------
+    message: dict
+        サインアップ処理の成功失敗をメッセージで返却する。 (key: message)
+    jwt_token: str
+        JWT Token
+
+    Exceptions
+    ----------
+    - DBからのデータ取得に失敗した場合
+    - emailが存在しない場合
+    - 認証情報が間違っていた場合
+    - 無効なアカウントでログインした場合
     """
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
-    stmt = select(User).where(User.email == email)
-
+    stmt = select(User.id, User.email, User.name,
+                  User.first_name, User.family_name,
+                  User.update_timestamp, User.create_timestamp,
+                  User.is_active, User.hashed_password,)\
+            .where(User.email == email)
     try:
         res_from_db = session.execute(stmt).first()
     except Exception as e:
         session.close()
         raise Exception("ログイン処理に失敗しました。")
 
-    user_info = {"id": res_from_db[0].id, "name": res_from_db[0].name, "family_name": res_from_db[0].family_name,
-                 "first_name": res_from_db[0].first_name, "email": res_from_db[0].email,
-                 "hashed_password": res_from_db[0].hashed_password, "is_superuser": res_from_db[0].is_superuser,
-                 "create_timestamp": res_from_db[0].create_timestamp, "update_timestamp": res_from_db[0].update_timestamp, }
+    if res_from_db is None:
+        raise Exception("登録されていないemailです")
 
-    is_correct_pass = verify_password_and_hashed_one(user_info["hashed_password"], password)
+    # パスワードの検証 & 有効ユーザの確認
+    hashed_password = res_from_db.hashed_password
+    is_correct_pass = verify_password_and_hashed_one(hashed_password, password)
+    is_active = res_from_db.is_active
     if not is_correct_pass:
         raise Exception("パスワードが違います。")
+    elif not is_active:
+        raise Exception("アカウントが無効になっているためログインできません。")
 
-    return user_info
+    # レスポンス用データ
+    user_info = {"id": res_from_db.id, "name": res_from_db.name, "email": res_from_db.email,
+                "first_name": res_from_db.first_name, "family_name": res_from_db.family_name,
+                "create_timestamp": res_from_db.create_timestamp, "update_timestamp": res_from_db.update_timestamp, }
+
+    jwt_token = auth.encode_jwt(res_from_db.email)
+    return user_info, jwt_token
 
 
 def fetch_active_user_list():
@@ -199,3 +236,45 @@ def fetch_active_user_list():
     except Exception as e:
         session.close()
         raise Exception(e)
+
+
+def fetch_user_using_specify_email(email: str):
+    """
+    指定したemailアドレスを持つユーザ情報を取得する。
+
+    Attributes
+    ----------
+    email: str
+        emailアドレス
+
+    Returns
+    -------
+    users: dict
+        ユーザ情報
+
+    Exceptions
+    ----------
+    - DBからのデータ取得に失敗した場合
+    """
+    stmt = select(
+                User.id, User.name, User.first_name, User.family_name,
+                User.email, User.update_timestamp, User.create_timestamp)\
+            .where(User.email == email)
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+
+    try:
+        res_from_db = session.execute(stmt).first()
+        session.close()
+        # ユーザが存在しない場合はエラー発報
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+    if res_from_db is None:
+        raise Exception("このemailは登録されていません。")
+    # ユーザ情報の取得
+    user_info = {"id": res_from_db.id, "name": res_from_db.name, "family_name": res_from_db.family_name,
+                "first_name": res_from_db.first_name, "email": res_from_db.email,
+                "create_timestamp": res_from_db.create_timestamp, "update_timestamp": res_from_db.update_timestamp, }
+    return user_info

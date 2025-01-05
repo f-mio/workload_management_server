@@ -8,13 +8,17 @@ from pydantic import BaseModel
 load_dotenv()
 
 
-# csrf-protectのモデル設定
 class CsrfSettings(BaseModel):
+    """
+    csrf-protectのモデル設定
+    """
     secret_key: str  = f"{os.getenv('SECRET_KEY_FOR_CSRF_TOKEN')}"
 
 
-# CSRFトークン
 class CsrfType(BaseModel):
+    """
+    CSRFトークン
+    """
     csrf_token: str
 
  
