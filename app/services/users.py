@@ -111,7 +111,7 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
     # emailが登録済みかどうかを判定する
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
-    stmt = select(User).where(User.email == email)
+    stmt = select(User.id).where(User.email == email)
     try:
         any_user = session.execute(stmt).all()
     except Exception as e:
@@ -128,13 +128,24 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
     # パスワードのハッシュ化
     password = user_info.pop("password")
     hashed_password: str = convert_password_to_hashed_one(password)
+
+    # 管理者が0人だった場合に、新規ユーザを管理者にする。
+    select_superuser_stmt = select(User.id).where(User.is_superuser == True)
+    try:
+        root_users = session.execute(select_superuser_stmt)
+        session.close()
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+    is_superuser: bool = True if root_users is None else False
+
     # 登録用ユーザ情報の作成
     new_user = {**user_info, "hashed_password": hashed_password,
-                "is_superuser": False, "update_timestamp": dt.datetime.now(),}
-    stmt = insert(User).values(new_user)
+                "is_superuser": is_superuser, "update_timestamp": dt.datetime.now(),}
+    insert_stmt = insert(User).values(new_user)
     try:
         # ユーザ登録
-        session.execute(stmt)
+        session.execute(insert_stmt)
         session.commit()
         session.close()
     except Exception as e:
@@ -143,7 +154,7 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
 
     res_message = {"message": "ユーザ登録に成功しました"}
 
-    jwt_token = auth.encode_jwt(res_from_db.email)
+    jwt_token = auth.encode_jwt(email)
 
     return res_message, jwt_token
 
