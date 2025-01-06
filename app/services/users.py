@@ -133,11 +133,11 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
     select_superuser_stmt = select(User.id).where(User.is_superuser == True)
     try:
         root_users = session.execute(select_superuser_stmt)
-        session.close()
     except Exception as e:
         session.close()
         raise Exception(e)
-    is_superuser: bool = True if root_users is None else False
+    root_ids = [obj for obj in root_users]
+    is_superuser: bool = True if len(root_ids)==0  else False
 
     # 登録用ユーザ情報の作成
     new_user = {**user_info, "hashed_password": hashed_password,
@@ -156,7 +156,7 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
 
     jwt_token = auth.encode_jwt(email)
 
-    return res_message, jwt_token
+    return [res_message, jwt_token]
 
 
 def verify_user_info_for_login(email: str, password: str) -> list[dict, str]:
@@ -213,7 +213,7 @@ def verify_user_info_for_login(email: str, password: str) -> list[dict, str]:
                 "create_timestamp": res_from_db.create_timestamp, "update_timestamp": res_from_db.update_timestamp, }
 
     jwt_token = auth.encode_jwt(res_from_db.email)
-    return user_info, jwt_token
+    return [user_info, jwt_token]
 
 
 def fetch_active_user_list():
