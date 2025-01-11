@@ -30,12 +30,13 @@ async def api_user_signup(request: Request, user_form_value: UserFormBody, respo
     # DB登録処理
     message, jwt_token = insert_new_user_into_app_db(new_user)
     response.set_cookie(
-        key="access_token", value=f"Bearer {jwt_token}", httponly=True, samesite="none", secure=True)
+        key="access_token", value=f"Bearer {jwt_token}",
+        httponly=True, samesite="none", secure=True
+    )
 
     return message
 
 
-# サインイン用エンドポイント
 @router.post("/signin", response_model=UserInfo)
 async def api_user_signin(request: Request, login_form_value: LoginForm, response: Response):
     """
@@ -44,38 +45,67 @@ async def api_user_signin(request: Request, login_form_value: LoginForm, respons
     form_value = jsonable_encoder(login_form_value)
     user_info, jwt_token = verify_user_info_for_login(form_value["email"], form_value["password"])
     response.set_cookie(
-        key="access_token", value=f"Bearer {jwt_token}", httponly=True, samesite="none", secure=True)
-
+        key="access_token", value=f"Bearer {jwt_token}",
+        httponly=True, samesite="none", secure=True
+    )
     return user_info
 
 
-# 有効なユーザ一覧を返却するエンドポイント
 @router.get("/active/all", response_model=list[UserListModel])
 async def api_fetch_active_user_list(request: Request, response: Response):
+    """
+    有効なユーザ一覧を返却するエンドポイント
+    """
     user_list = fetch_active_user_list()
     return user_list
 
 
 @router.get("/logout", response_model=ResponseMessage)
-def api_logout_user_account():
-    pass
+def api_logout_user_account(response: Response):
+    """
+    ログアウト用エンドポイント
+    """
+    response.set_cookie(
+        key="access_token", value="",
+        httponly=True, samesite="none", secure=True
+    )
+    return
 
 
 @router.get("/deactivate", response_model=ResponseMessage)
-def api_deactivate_user_account():
-    pass
+def api_deactivate_user_account(response: Response):
+    """
+    アカウント無効用のエンドポイント
+    """
+    # [TODO] 自身のアカウント無効化
+
+    # JWT Tokenの無効化
+    response.set_cookie(key="access_token", value="",
+        httponly=True, samesite="none", secure=True
+    )
+
+    return
 
 
 @router.get("/root/delete", response_model=ResponseMessage)
 def api_delete_user_account_from_db(user_id: int):
+    """
+    管理者機能 アカウント削除用のエンドポイント
+    """
     pass
 
 
 @router.get("/root/activate", response_model=ResponseMessage)
 def api_activate_user_account(user_id: int):
+    """
+    管理者機能 無効ユーザの有効化用エンドポイント
+    """
     pass
 
 
 @router.get("/root/permission", response_model=ResponseMessage)
 def api_grant_root_permission(user_id: int):
+    """
+    管理者機能 管理者機能付与用エンドポイント
+    """
     pass

@@ -16,11 +16,8 @@ auth = Auth_Utils()
 async def get_csrf_token(response: Response, csrf_protect: CsrfProtect = Depends()):
     csrf_token, signed_token = csrf_protect.generate_csrf()
     response.set_cookie(
-        key="fastapi_signed_token",
-        value=signed_token,
-        httponly=True,
-        secure=True,
-        samesite="none"
+        key="fastapi_signed_token", value=signed_token,
+        httponly=True, samesite="none", secure=True
     )
     res = { "csrf_token": csrf_token }
     return res

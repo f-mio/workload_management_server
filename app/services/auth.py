@@ -5,7 +5,8 @@ import datetime as dt
 # サードパーティ製モジュール
 from dotenv import load_dotenv
 import jwt
-from fastapi import HTTPException
+# プロジェクトモジュール
+from services.custom_exceptions import JwtTokenError
 
 # 環境変数の読み込み
 load_dotenv()
@@ -43,10 +44,10 @@ class Auth_Utils():
             payload = jwt.decode(token, SECRET_KEY_JWT_TOKEN, algorithms=["HS256"])
             return payload["sub"]
         except jwt.ExpiredSignatureError:
-            raise HTTPException(
-                status_code=401, detail="The JWT has expired.")
+            raise JwtTokenError(
+                status_code=401, detail="JWTトークンの有効期限切れです。")
         except jwt.InvalidTokenError as e:
-            raise HTTPException(status_code=401, detail=f"JWT is not valid.\nerror message: {e}")
+            raise JwtTokenError(status_code=401, detail=f"不正なJWTトークンです。\nError message: {e}")
 
 
     def verify_jwt(self, request) -> str:
@@ -55,7 +56,7 @@ class Auth_Utils():
         """
         token = request.cookies.get("access_token")
         if not token:
-            raise HTTPException(
+            raise JwtTokenError(
                 status_code=401, detail='No JWT exist: may not set yet or deleted')
         _, _, jwt_token = token.partition(" ")
         email = self.decode_jwt(jwt_token)

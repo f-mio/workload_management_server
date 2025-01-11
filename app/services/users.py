@@ -10,6 +10,7 @@ from argon2.exceptions import VerifyMismatchError, InvalidHashError
 # プロジェクトモジュール
 from db.models import User
 from services.auth import Auth_Utils
+from services.custom_exceptions import LoginError
 
 # ref
 #   - https://argon2-cffi.readthedocs.io/en/stable/
@@ -104,9 +105,9 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
 
     # name, emailがNoneでないことを確認する
     if (name is None) or name =="":
-        raise ValueError("nameが入力されていません。")
+        raise SignupError("nameが入力されていません。")
     if (email is None) or email =="":
-        raise ValueError("emailが入力されていません。")
+        raise SignupError("emailが入力されていません。")
 
     # emailが登録済みかどうかを判定する
     Session = sessionmaker(bind=workload_db_engine)
@@ -116,7 +117,7 @@ def insert_new_user_into_app_db(user_info: dict) -> list[dict, str]:
         any_user = session.execute(stmt).all()
     except Exception as e:
         session.close()
-        raise Exception(f"ユーザ登録時のemail検証作業に失敗しました。\nerror message: {e}")
+        raise SignupError(f"ユーザ登録時のemail検証作業に失敗しました。\nerror message: {e}")
 
     if any_user:
         session.close()
@@ -196,16 +197,16 @@ def verify_user_info_for_login(email: str, password: str) -> list[dict, str]:
         raise Exception("ログイン処理に失敗しました。")
 
     if res_from_db is None:
-        raise Exception("登録されていないemailです")
+        raise LoginError("登録されていないemailです")
 
     # パスワードの検証 & 有効ユーザの確認
     hashed_password = res_from_db.hashed_password
     is_correct_pass = verify_password_and_hashed_one(hashed_password, password)
     is_active = res_from_db.is_active
     if not is_correct_pass:
-        raise Exception("パスワードが違います。")
+        raise LoginError("パスワードが違います。")
     elif not is_active:
-        raise Exception("アカウントが無効になっているためログインできません。")
+        raise LoginError("アカウントが無効になっているためログインできません。")
 
     # レスポンス用データ
     user_info = {"id": res_from_db.id, "name": res_from_db.name, "email": res_from_db.email,
