@@ -22,6 +22,12 @@ from models.jira_contents import (
 router = APIRouter(prefix="/api/project")
 
 
+@router.get("/db/all", response_model=list[ProjectInfoFromDB])
+async def api_fetch_all_projects():
+    projects = fetch_all_projects_from_db()
+    return projects
+
+
 @router.get("/db/update/all", response_model=ResponseMessage)
 async def api_update_all_projects_and_issues():
     """
