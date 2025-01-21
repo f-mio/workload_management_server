@@ -16,7 +16,7 @@ class UserInfo(BaseModel):
     first_name: str
     email: str
     # hashed_password: str
-    # is_superuser: bool
+    is_superuser: bool
     update_timestamp: dt.datetime
     create_timestamp: dt.datetime
 

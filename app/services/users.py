@@ -186,34 +186,36 @@ def verify_user_info_for_login(email: str, password: str) -> list[dict, str]:
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
     stmt = select(User.id, User.email, User.name,
-                  User.first_name, User.family_name,
+                  User.first_name, User.family_name, User.is_superuser,
                   User.update_timestamp, User.create_timestamp,
                   User.is_active, User.hashed_password,)\
             .where(User.email == email)
     try:
-        res_from_db = session.execute(stmt).first()
+        res = session.execute(stmt).first()
     except Exception as e:
         session.close()
         raise Exception("ログイン処理に失敗しました。")
 
-    if res_from_db is None:
+    if res is None:
         raise LoginError("登録されていないemailです")
 
     # パスワードの検証 & 有効ユーザの確認
-    hashed_password = res_from_db.hashed_password
+    hashed_password = res.hashed_password
     is_correct_pass = verify_password_and_hashed_one(hashed_password, password)
-    is_active = res_from_db.is_active
+    is_active = res.is_active
     if not is_correct_pass:
         raise LoginError("パスワードが違います。")
     elif not is_active:
         raise LoginError("アカウントが無効になっているためログインできません。")
 
     # レスポンス用データ
-    user_info = {"id": res_from_db.id, "name": res_from_db.name, "email": res_from_db.email,
-                "first_name": res_from_db.first_name, "family_name": res_from_db.family_name,
-                "create_timestamp": res_from_db.create_timestamp, "update_timestamp": res_from_db.update_timestamp, }
+    user_info = {
+        "id": res.id, "name": res.name, "email": res.email,
+        "first_name": res.first_name, "family_name": res.family_name,
+        "is_superuser": res.is_superuser,
+        "create_timestamp": res.create_timestamp, "update_timestamp": res.update_timestamp, }
 
-    jwt_token = auth.encode_jwt(res_from_db.email)
+    jwt_token = auth.encode_jwt(res.email)
     return [user_info, jwt_token]
 
 
@@ -270,23 +272,26 @@ def fetch_user_using_specify_email(email: str):
     """
     stmt = select(
                 User.id, User.name, User.first_name, User.family_name,
-                User.email, User.update_timestamp, User.create_timestamp)\
+                User.is_superuser, User.email, User.is_superuser,
+                User.update_timestamp, User.create_timestamp)\
             .where(User.email == email)
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
 
     try:
-        res_from_db = session.execute(stmt).first()
+        res = session.execute(stmt).first()
         session.close()
         # ユーザが存在しない場合はエラー発報
     except Exception as e:
         session.close()
         raise Exception(e)
 
-    if res_from_db is None:
+    if res is None:
         raise Exception("このemailは登録されていません。")
     # ユーザ情報の取得
-    user_info = {"id": res_from_db.id, "name": res_from_db.name, "family_name": res_from_db.family_name,
-                "first_name": res_from_db.first_name, "email": res_from_db.email,
-                "create_timestamp": res_from_db.create_timestamp, "update_timestamp": res_from_db.update_timestamp, }
+    user_info = {
+        "id": res.id, "name": res.name, "family_name": res.family_name,
+        "first_name": res.first_name, "email": res.email,
+        "is_superuser": res.is_superuser,
+        "create_timestamp": res.create_timestamp, "update_timestamp": res.update_timestamp, }
     return user_info
