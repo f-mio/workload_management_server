@@ -116,6 +116,16 @@ $ alembic upgrade head
 ```
 
 
+```bash
+$ alembic revision "create subtask_with_parent_path view"
+```
+上記で作成されたマイグレーションファイルにビュー作成用のコマンドを記載する。  
+記載内容は、【db_design】内の【6bd6e0fcfde7_create_view_subtask_with_parent_path.py】と同様に記載すること。
+```bash
+$ alembic upgrade {作成されたrevisionバージョン}
+```
+
+
 # 利用に関して
 
 ## 日本語版
