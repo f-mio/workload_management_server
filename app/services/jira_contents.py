@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
-from db.models import Project, Issue
+from db.models import Project, Issue, SubtaskWithPathView
 
 
 # 環境変数からJIRAのAPIへのアクセス情報を取得
@@ -381,6 +381,54 @@ def fetch_all_subtasks_from_db() -> list[dict]:
               "update_timestamp": info[0].update_timestamp,
               "create_timestamp": info[0].create_timestamp }
             for info in subtasks_raw ]
+
+        return subtasks
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+
+def fetch_all_subtasks_with_path_from_db():
+    """
+    DBに登録されているsubtaskを取得して返却する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    projects: list[dict]
+        key: id, name, project_id, parent_issue_id, type,
+             is_subtask, status, limit_date, description,
+             update_timestamp, create_timestamp
+    """
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    # 取得用のSQL作成
+    stmt = select(
+                SubtaskWithPathView.id, SubtaskWithPathView.name, SubtaskWithPathView.project_id,
+                SubtaskWithPathView.parent_issue_id, SubtaskWithPathView.type, SubtaskWithPathView.is_subtask,
+                SubtaskWithPathView.status, SubtaskWithPathView.limit_date, SubtaskWithPathView.description,
+                SubtaskWithPathView.path, SubtaskWithPathView.update_timestamp, SubtaskWithPathView.create_timestamp )\
+            .order_by(
+                SubtaskWithPathView.project_id, SubtaskWithPathView.parent_issue_id, SubtaskWithPathView.id)
+
+    try:
+        # DBからのデータ取得
+        res = session.execute(stmt).all()
+        session.close()
+        # データの成形
+        subtasks = [
+            { "id": info.id, "name": info.name, "project_id": info.project_id,
+              "parent_issue_id": info.parent_issue_id, "type": info.type,
+              "is_subtask": info.is_subtask, "status": info.status,
+              "limit_date": info.limit_date, "description": info.description,
+              "path": info.path,
+              "update_timestamp": info.update_timestamp,
+              "create_timestamp": info.create_timestamp }
+            for info in res ]
 
         return subtasks
     except Exception as e:

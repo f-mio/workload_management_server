@@ -40,3 +40,17 @@ class IssueInfoFromDB(BaseModel):
     description: str | None
     update_timestamp: dt.datetime
     create_timestamp: dt.datetime
+
+
+class SubtaskWithPath(BaseModel):
+    id: int
+    name: str
+    project_id: int
+    parent_issue_id: int | None
+    type: str
+    status: str
+    limit_date: dt.date | None
+    description: str | None
+    update_timestamp: dt.datetime
+    create_timestamp: dt.datetime
+    path: str

@@ -95,3 +95,24 @@ class Workload(Base):
     detail: Mapped[text_type]
     update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
     create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
+
+
+class SubtaskWithPathView(Base):
+    """
+    subtaskにJIRAの階層情報を付与したビュー
+    """
+    __tablename__ = "subtask_with_parent_path"
+    __table_args__ = {'info': dict(is_view=True)}
+
+    id: Mapped[bigint_type] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+    project_id: Mapped[bigint_type] = mapped_column(ForeignKey("project.id"), nullable=True)
+    parent_issue_id: Mapped[bigint_type] = mapped_column(ForeignKey("issue.id"), nullable=True)
+    type: Mapped[str] = mapped_column(String(10))
+    is_subtask: Mapped[bool]
+    status: Mapped[str] = mapped_column(String(10))
+    limit_date: Mapped[dt.date] = mapped_column(nullable=True)
+    description: Mapped[text_type]
+    path: Mapped[str]
+    update_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, onupdate=dt.datetime.now)
+    create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
