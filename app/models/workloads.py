@@ -29,17 +29,17 @@ class WorkloadCondition(BaseModel):
     target_date: Optional[dt.date] = None
     lower_date: Optional[dt.date] = None
     upper_date: Optional[dt.date] = None
-    project_id: Optional[int] = None
-    issue_list: Optional[list] = None
+    # project_id: Optional[int] = None
+    # issue_list: Optional[list] = None
 
 
 class RegisteredWorkload(BaseModel):
     project_id: int
     project_name: str
-    issue_id_1: int
-    issue_name_1: str
-    issue_id_2: int
-    issue_name_2: str
+    issue_id_1: int | None
+    issue_name_1: str | None
+    issue_id_2: int | None
+    issue_name_2: str | None
     subtask_id: int
     subtask_name: str
     workload_id: int

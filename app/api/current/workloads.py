@@ -6,13 +6,14 @@ from fastapi.encoders import jsonable_encoder
 from fastapi_csrf_protect import CsrfProtect
 # プロジェクトモジュール
 from services.auth import Auth_Utils
-from services.workload import (
+from services.workloads import (
     insert_workload_info_into_db, fetch_specify_workload,
     update_specify_workload,
     fetch_specify_user_workloads_from_db,
+    fetch_specify_condition_workloads_from_db,
 )
 from models.auth import CsrfType, ResponseMessage
-from models.workloads import WorkloadInfoFromDB, WorkloadForm
+from models.workloads import WorkloadInfoFromDB, WorkloadForm, WorkloadCondition, RegisteredWorkload
 
 
 # 初期化処理
@@ -77,9 +78,11 @@ def api_fetch_workloads_related_user(
     return workloads
 
 
-@router.post("/db/search", response_model=list[WorkloadInfoFromDB])
-def api_fetch_workloads_using_specify_condition(condition: dict):
+@router.post("/db/search", response_model=list[RegisteredWorkload])
+def api_fetch_workloads_using_specify_condition(condition: WorkloadCondition):
     """
     指定条件の登録工数情報取得
     """
-    pass
+    condition = jsonable_encoder(condition)
+    workloads = fetch_specify_condition_workloads_from_db(condition)
+    return workloads

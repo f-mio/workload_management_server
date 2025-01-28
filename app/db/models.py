@@ -97,6 +97,7 @@ class Workload(Base):
     create_timestamp: Mapped[dt.datetime] = mapped_column(nullable=False, default=dt.datetime.now)
 
 
+# マイグレーション時はコメントアウトすること
 class SubtaskWithPathView(Base):
     """
     subtaskにJIRAの階層情報を付与したビュー

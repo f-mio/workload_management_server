@@ -56,7 +56,7 @@ WITH RECURSIVE subtask_with_path_raw AS (
 
 SELECT
     st.*,
-    '/' || st.project_id || '/' || st_path.path AS path
+    '/' || st_path.path AS path
 FROM (
     SELECT *
     FROM issue

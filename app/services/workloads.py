@@ -1,15 +1,16 @@
 # 標準モジュール
 import os
+import re
 import json
 import requests
 import datetime as dt
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
-from sqlalchemy import create_engine, select, update
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, select, update, and_
+from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
-from db.models import Workload
+from db.models import Workload, SubtaskWithPathView, Project, Issue, User
 from models.auth import ResponseMessage
 
 # SQLAlchemyのエンジン
@@ -182,7 +183,7 @@ def fetch_specify_user_workloads_from_db(
                 Workload.work_date >= lower_date,
                 Workload.work_date <= upper_date) \
             .order_by(Workload.work_date, Workload.id)
- 
+
     try:
         db_res = session.execute(stmt).all()
         workloads = [ {"id": info[0].id,
@@ -197,5 +198,76 @@ def fetch_specify_user_workloads_from_db(
     except Exception as e:
         session.close()
         raise Exception(e)
+
+    return workloads
+
+
+
+def fetch_specify_condition_workloads_from_db(condition: dict) -> list[dict]:
+    """
+    指定条件の登録済み工数をを取得
+
+    Attributes
+    ----------
+    condition: dict
+        条件
+
+    Returns
+    -------
+    workloads: list[dict]
+        指定条件の工数
+
+    Exception
+    ---------
+    - DB接続失敗
+    """
+
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+
+    # エイリアスを関数内で定義
+    ParentIssue = aliased(Issue)
+    ChildIssue = aliased(Issue)
+
+    res = session.query(Workload, SubtaskWithPathView, Project, ParentIssue, ChildIssue, User)\
+        .join(SubtaskWithPathView, SubtaskWithPathView.id == Workload.subtask_id, isouter=True)\
+        .join(Project, Project.id == SubtaskWithPathView.project_id, isouter=True)\
+        .join(ParentIssue, and_(SubtaskWithPathView.path.contains(ParentIssue.id), ParentIssue.parent_issue_id.is_(None) ), isouter=True)\
+        .join(ChildIssue, and_(SubtaskWithPathView.path.contains(ChildIssue.id), ChildIssue.parent_issue_id == ParentIssue.id), isouter=True)\
+        .join(User, Workload.user_id == User.id)\
+        .order_by(Workload.work_date, Project.id, ParentIssue.id, ChildIssue.id, SubtaskWithPathView.id, Workload.id)
+
+    target_date = condition.get("target_date")
+    lower_date = condition.get("lower_date")
+    upper_date = condition.get("upper_date")
+    user_id = condition.get("specity_user_id")
+
+    if target_date is not None:
+        res = res.filter(Workload.work_date == target_date)
+    if lower_date is not None:
+        res = res.filter(Workload.work_date >= lower_date)
+    if upper_date is not None:
+        res = res.filter(Workload.work_date <= upper_date)
+    if user_id is not None:
+        res = res.filter(Workload.user_id == int(user_id))
+
+    workloads = [ { "project_id": info[2].id,
+                    "project_name": info[2].name,
+                    "path": info[1].path,
+                    "issue_id_1": info[3].id if info[3] else None,
+                    "issue_name_1": info[3].name if info[3] else None,
+                    "issue_id_2": info[4].id if info[4] else None,
+                    "issue_name_2": info[4].name if info[4] else None,
+                    "subtask_id": info[0].subtask_id if info[0] else None,
+                    "subtask_name": info[1].name if info[1] else None,
+                    "workload_id": info[0].id,
+                    "user_id": info[0].user_id, "user_name": info[5].name,
+                    "work_date": info[0].work_date,
+                    "workload_minute": info[0].workload_minute,
+                    "detail": info[0].detail,
+                    "update_timestamp": info[0].update_timestamp,
+                    "create_timestamp": info[0].create_timestamp
+                  } for info in res.all()
+                ]
 
     return workloads

@@ -37,7 +37,7 @@ CREATE VIEW IF NOT EXISTS subtask_with_parent_path AS (
 
     SELECT
         st.*,
-        '/' || st.project_id || '/' || st_path.path AS path
+        '/' || st_path.path AS path
     FROM (
         SELECT *
         FROM issue
