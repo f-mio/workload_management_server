@@ -64,7 +64,7 @@ async def api_fetch_all_jira_projects(response: Response, csrf_protect: CsrfProt
 @router.get("/root/db/all", response_model=list[ProjectInfoFromDB])
 async def api_fetch_all_db_project(response: Response, csrf_protect: CsrfProtect = Depends()):
     """
-    Jiraから、APIユーザ権限が所有しているすべてのプロジェクト情報を返却する。
+    DBから、APIユーザ権限が所有しているすべてのプロジェクト情報を返却する。
     """
     # [TODO] JWT検証処理を入れる
     # [TODO] rootユーザかどうかの判定

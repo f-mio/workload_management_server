@@ -9,7 +9,7 @@ class ProjectInfoFromDB(BaseModel):
     name: str
     jira_key: str
     description: str
-    is_target: bool # root userしか変更できない機能
+    is_target: bool # root userのみ変更可能
     update_timestamp: dt.datetime
     create_timestamp: dt.datetime
 
@@ -19,6 +19,7 @@ class ProjectInfoFromJira(BaseModel):
     name: str
     jira_key: str
     description: str
+    is_target: bool # root userのみ変更可能
 
 
 class ProjectForm(BaseModel):

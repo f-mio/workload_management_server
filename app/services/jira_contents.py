@@ -37,14 +37,23 @@ def fetch_all_projects_from_jira() -> list[dict | None]:
     auth = HTTPBasicAuth(jira_user, jira_api_token)
     headers = { "Accept": "application/json" }
     jira_endpoint = f"{jira_base_url}/rest/api/3/project?expand=description"
+
+    # DB内のProjectから取込対象かどうかの情報を取得
+    projects_in_db = fetch_all_projects_from_db()
+    id2target_map = {
+        str(p["id"]): ( p.get("is_target") if p.get("is_target") else False )
+        for p in projects_in_db }
+
     # APIからのデータ取得とデータのデコード
     response = requests.request(
         "GET", jira_endpoint, headers=headers, auth=auth )
     decoded_res = json.loads(response.text)
     # レスポンスから必要な情報を抽出して、規定のフォーマットに直す
     projects = [
-        { "id": project["id"], "name": project["name"], "jira_key": project["key"],
-        "description": project.get("description") }
+        { "id": str(project["id"]), "name": project["name"], "jira_key": project["key"],
+          "description": project.get("description"),
+          "is_target": (id2target_map.get(project["id"]) if id2target_map.get(project["id"]) else False)
+        }
         for project in decoded_res ]
 
     return projects
