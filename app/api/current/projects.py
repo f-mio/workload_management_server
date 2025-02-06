@@ -8,6 +8,7 @@ from fastapi_csrf_protect import CsrfProtect
 from services.auth import Auth_Utils
 from services.jira_contents import (
     fetch_all_projects_from_jira,
+    put_jira_target_status,
     fetch_all_issues_related_project_ids_from_jira,
     fetch_all_projects_from_db, generate_projects_for_upsert,
     upsert_jira_project_info_into_db, upsert_jira_issues_into_app_db,
@@ -59,6 +60,18 @@ async def api_fetch_all_jira_projects(response: Response, csrf_protect: CsrfProt
     projects = fetch_all_projects_from_jira()
 
     return projects
+
+
+@router.put("/root/project/edit/target", response_model=ResponseMessage)
+async def api_put_jira_target_status(response: Response, project_json: ProjectInfoFromJira, csrf_protect: CsrfProtect = Depends()):
+    """
+    Jira projectをDBにupsertする。update行う場合は、is_targetとupdate_timestampを更新する。
+    """
+    project = jsonable_encoder(project_json)
+    project["update_timestamp"] = dt.datetime.now()
+    message = put_jira_target_status(project)
+
+    return message
 
 
 @router.get("/root/db/all", response_model=list[ProjectInfoFromDB])

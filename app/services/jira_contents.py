@@ -59,6 +59,40 @@ def fetch_all_projects_from_jira() -> list[dict | None]:
     return projects
 
 
+def put_jira_target_status(project):
+    """
+    projectをDBにupsertする。update行う場合は、is_targetとupdate_timestampを更新する。
+
+    Attributes
+    ----------
+    project: dict
+
+    Returns
+    -------
+    None
+    """
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+
+    # 登録用のSQL作成 (https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#insert-on-conflict-upsert)
+    insert_stmt = insert(Project).values(project)
+    upsert_stmt = insert_stmt.on_conflict_do_update(
+            index_elements=['id'],
+            set_= { "is_target": insert_stmt.excluded.is_target,
+                    "update_timestamp": dt.datetime.now() }
+    )
+    # DBへの登録処理
+    try:
+        session.execute(upsert_stmt)
+        session.commit()
+        session.close()
+        return { "message": "projectの更新に成功しました" }
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+
 def fetch_all_projects_from_db() -> list[dict | None]:
     """
     DBに登録されているprojectを取得して返却する。
