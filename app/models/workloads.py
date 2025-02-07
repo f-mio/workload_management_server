@@ -25,7 +25,7 @@ class WorkloadForm(BaseModel):
 
 
 class WorkloadCondition(BaseModel):
-    specity_user_id: Optional[int] = None
+    specify_user_id: Optional[int] = None
     target_date: Optional[dt.date] = None
     lower_date: Optional[dt.date] = None
     upper_date: Optional[dt.date] = None

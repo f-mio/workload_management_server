@@ -240,7 +240,7 @@ def fetch_specify_condition_workloads_from_db(condition: dict) -> list[dict]:
     target_date = condition.get("target_date")
     lower_date = condition.get("lower_date")
     upper_date = condition.get("upper_date")
-    user_id = condition.get("specity_user_id")
+    user_id = condition.get("specify_user_id")
 
     if target_date is not None:
         res = res.filter(Workload.work_date == target_date)
