@@ -144,65 +144,6 @@ def update_specify_workload(workload_id: int , form_value: dict) -> dict:
         return {"message": f"工数情報修正に失敗しました。\nerror message: {e}"}
 
 
-def fetch_specify_user_workloads_from_db(
-        user_id: int, lower_date: dt.date | None = None,
-        upper_date: dt.date | None = None) -> list[dict]:
-    """
-    user_idに紐づく工数を取得
-
-    Attributes
-    ----------
-    user_id: int
-        ユーザID
-    range_days: int
-        本日から取得期間 (デフォルト値: 365日)
-    upper_date: dt.date
-        取得日時
-
-    Returns
-    -------
-    workloads: list[dict]
-        user_idが持つ工数情報
-
-    Exception
-    ---------
-    - DB接続失敗
-    """
-    # 期間が未指定の場合365日を設定
-    if lower_date is None:
-        lower_date = dt.date.today() - dt.timedelta(days=365)
-    if upper_date is None:
-        upper_date = dt.date.today()
-
-    Session = sessionmaker(bind=workload_db_engine)
-    session = Session()
-
-    stmt = select(Workload)\
-            .where(
-                Workload.user_id == user_id,
-                Workload.work_date >= lower_date,
-                Workload.work_date <= upper_date) \
-            .order_by(Workload.work_date, Workload.id)
-
-    try:
-        db_res = session.execute(stmt).all()
-        workloads = [ {"id": info[0].id,
-                       "subtask_id": info[0].subtask_id, "user_id": info[0].user_id,
-                       "work_date": info[0].work_date, "workload_minute": info[0].workload_minute,
-                       "detail": info[0].detail,
-                       "update_timestamp": info[0].update_timestamp, "create_timestamp": info[0].create_timestamp,
-                      }
-                      for info in db_res
-                    ]
-        session.close()
-    except Exception as e:
-        session.close()
-        raise Exception(e)
-
-    return workloads
-
-
-
 def fetch_specify_condition_workloads_from_db(condition: dict) -> list[dict]:
     """
     指定条件の登録済み工数をを取得
@@ -241,6 +182,8 @@ def fetch_specify_condition_workloads_from_db(condition: dict) -> list[dict]:
     lower_date = condition.get("lower_date")
     upper_date = condition.get("upper_date")
     user_id = condition.get("specify_user_id")
+    workload_id = condition.get("workload_id")
+    is_target_project = condition.get("is_target_project")
 
     if target_date is not None:
         res = res.filter(Workload.work_date == target_date)
@@ -250,6 +193,10 @@ def fetch_specify_condition_workloads_from_db(condition: dict) -> list[dict]:
         res = res.filter(Workload.work_date <= upper_date)
     if user_id is not None:
         res = res.filter(Workload.user_id == int(user_id))
+    if workload_id is not None:
+        res = res.filter(Workload.id == int(workload_id))
+    if is_target_project is not None:
+        res = res.filter(Project.is_target == is_target_project)
 
     workloads = [ { "project_id": info[2].id,
                     "project_name": info[2].name,

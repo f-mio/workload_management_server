@@ -9,7 +9,7 @@ from services.auth import Auth_Utils
 from services.workloads import (
     insert_workload_info_into_db, fetch_specify_workload,
     update_specify_workload,
-    fetch_specify_user_workloads_from_db,
+    # fetch_specify_user_workloads_from_db,
     fetch_specify_condition_workloads_from_db,
 )
 from models.auth import CsrfType, ResponseMessage
@@ -60,22 +60,6 @@ def api_update_workload(workload_id: int, form_value: WorkloadForm):
     decoded_form_value = jsonable_encoder(form_value)
     message: dict = update_specify_workload(workload_id, decoded_form_value)
     return message
-
-
-@router.get("/db/user/{user_id}", response_model=list[WorkloadInfoFromDB])
-def api_fetch_workloads_related_user(
-        user_id: int, lower_date: dt.date | None = None,
-        upper_date: dt.date | None = None):
-    """
-    特定ユーザの登録工数情報取得
-    """
-    # [TODO] JWT検証処理を入れる
-    # [TODO] CSRF検証処理を入れる
-    # [TODO] rootユーザかどうかの判定
-
-    # 取得用条件をメソッドに渡し、工数情報を取得する
-    workloads = fetch_specify_user_workloads_from_db(user_id, lower_date, upper_date)
-    return workloads
 
 
 @router.post("/db/search", response_model=list[RegisteredWorkload])

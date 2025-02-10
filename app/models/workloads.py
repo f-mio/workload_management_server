@@ -29,6 +29,8 @@ class WorkloadCondition(BaseModel):
     target_date: Optional[dt.date] = None
     lower_date: Optional[dt.date] = None
     upper_date: Optional[dt.date] = None
+    workload_id: Optional[int] = None
+    is_target_project: Optional[bool] = None
     # project_id: Optional[int] = None
     # issue_list: Optional[list] = None
 

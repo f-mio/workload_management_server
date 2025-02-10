@@ -52,8 +52,7 @@ def fetch_all_projects_from_jira() -> list[dict | None]:
     projects = [
         { "id": str(project["id"]), "name": project["name"], "jira_key": project["key"],
           "description": project.get("description"),
-          "is_target": (id2target_map.get(project["id"]) if id2target_map.get(project["id"]) else False)
-        }
+          "is_target": (id2target_map.get(project["id"]) if id2target_map.get(project["id"]) else False) }
         for project in decoded_res ]
 
     return projects
