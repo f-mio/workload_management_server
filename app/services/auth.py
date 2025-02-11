@@ -24,21 +24,21 @@ class Auth_Utils():
         - https://github.com/aekasitt/fastapi-csrf-protect/tree/master
     """
 
-    def encode_jwt(self, email) -> str:
+    def encode_jwt(self, user_id) -> str:
         """
         jwt
         """
         payload: dict = {
             "exp": dt.datetime.now(tz=dt.timezone.utc) + dt.timedelta(days=0, minutes=JWT_EXPIRE_MINUTE),
             "iat": dt.datetime.now(tz=dt.timezone.utc),
-            "sub": email
+            "sub": str(user_id)
         }
         return jwt.encode(payload, SECRET_KEY_JWT_TOKEN, algorithm="HS256")
 
 
     def decode_jwt(self, token) -> str:
         """
-        jwtトークンをデコードし、適切なものだった場合subキーに格納されている文字列(email)を返す。
+        jwtトークンをデコードし、適切なものだった場合subキーに格納されている文字列(user_id)を返す。
         """
         try:
             payload = jwt.decode(token, SECRET_KEY_JWT_TOKEN, algorithms=["HS256"])
@@ -50,22 +50,22 @@ class Auth_Utils():
             raise JwtTokenError(status_code=401, detail=f"不正なJWTトークンです。\nError message: {e}")
 
 
-    def verify_jwt(self, request) -> str:
+    def verify_jwt(self, request) -> int:
         """
         jwtトークンを検証し、適切な場合emailを返す。
         """
-        token = request.cookies.get("access_token")
-        if not token:
+        access_token = request.cookies.get("access_token")
+        if not access_token:
             raise JwtTokenError(
                 status_code=401, detail='No JWT exist: may not set yet or deleted')
-        _, _, jwt_token = token.partition(" ")
-        email = self.decode_jwt(jwt_token)
-        return email
+        _, _, jwt_token = access_token.partition(" ")
+        user_id = self.decode_jwt(jwt_token)
+        return int(user_id)
 
 
     def verify_update_jwt(self, request) -> tuple[str, str]:
         """
-        JWTトークンの検証と更新を行い、新しいtokenとsubject(email)を返却する。
+        JWTトークンの検証と更新を行い、新しいtokenとsubject(id)を返却する。
         """
         subject = self.verify_jwt(request)
         new_token = self.encode_jwt(subject)
