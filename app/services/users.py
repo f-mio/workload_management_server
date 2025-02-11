@@ -10,7 +10,7 @@ from argon2.exceptions import VerifyMismatchError, InvalidHashError
 # プロジェクトモジュール
 from db.models import User
 from services.auth import Auth_Utils
-from services.custom_exceptions import LoginError
+from services.custom_exceptions import LoginError, SignupError
 
 # ref
 #   - https://argon2-cffi.readthedocs.io/en/stable/
@@ -215,7 +215,7 @@ def verify_user_info_for_login(email: str, password: str) -> list[dict, str]:
         "is_superuser": res.is_superuser,
         "create_timestamp": res.create_timestamp, "update_timestamp": res.update_timestamp, }
 
-    jwt_token = auth.encode_jwt(res.email)
+    jwt_token = auth.encode_jwt(res.id)
     return [user_info, jwt_token]
 
 
@@ -252,14 +252,14 @@ def fetch_active_user_list():
         raise Exception(e)
 
 
-def fetch_user_using_specify_email(email: str):
+def fetch_user_using_specify_id(user_id: str):
     """
-    指定したemailアドレスを持つユーザ情報を取得する。
+    指定したidを持つユーザ情報を取得する。
 
     Attributes
     ----------
-    email: str
-        emailアドレス
+    user_id: int
+        ユーザid
 
     Returns
     -------
@@ -274,7 +274,7 @@ def fetch_user_using_specify_email(email: str):
                 User.id, User.name, User.first_name, User.family_name,
                 User.is_superuser, User.email, User.is_superuser,
                 User.update_timestamp, User.create_timestamp)\
-            .where(User.email == email)
+            .where(User.id == user_id)
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
 

@@ -6,7 +6,7 @@ import requests
 import datetime as dt
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
-from sqlalchemy import create_engine, select, update, and_
+from sqlalchemy import create_engine, select, update, and_, delete
 from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy.dialects.postgresql import insert
 # プロジェクトモジュール
@@ -69,7 +69,7 @@ def fetch_specify_workload(workload_id: int) -> dict:
     ---------
     - DB接続失敗
     """
-
+    # セッションの作成
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
     stmt = select(Workload).\
@@ -116,10 +116,12 @@ def update_specify_workload(workload_id: int , form_value: dict) -> dict:
     ---------
     None
     """
-
+    # セッションの作成
     Session = sessionmaker(bind=workload_db_engine)
     session = Session()
+    # 有効IDかどうかを確認するクエリ作成
     check_stmt = select(Workload.id).where(Workload.id == workload_id)
+    # 更新用クエリ作成
     update_stmt = update(Workload)\
             .where(Workload.id == workload_id)\
             .values( subtask_id = form_value["subtask_id"],
@@ -142,6 +144,76 @@ def update_specify_workload(workload_id: int , form_value: dict) -> dict:
     except Exception as e:
         session.close()
         return {"message": f"工数情報修正に失敗しました。\nerror message: {e}"}
+
+
+def delete_workload(workload_id: int, user_id: int):
+    """
+    指定されたIDの工数を削除する機能 (所有者か、管理者でないと削除できない)
+
+    Attributes
+    ----------
+    workload_id: int
+        登録済み工数情報のID
+    user_id: int
+        JWTから入手したユーザID
+
+    Returns
+    -------
+    message: dict
+
+    """
+    # セッション作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+
+    # ユーザ取得
+    user_stmt = select(User.id, User.is_superuser).where(User.id == user_id)
+    try:
+        # DBからデータを取得
+        user_obj = session.execute(user_stmt).first()
+        # IDが存在しない場合
+        if user_obj is None:
+            raise Exception("無効なユーザIDが指定されました。")
+        # ユーザIDの取得
+        user_info = { "id": user_obj.id, "is_superuser": user_obj.is_superuser }
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+    # 工数取得
+    workload_stmt = select(Workload.id, Workload.user_id)\
+                        .where(Workload.id == workload_id)
+
+    try:
+        # DBからデータを取得
+        workload_obj = session.execute(workload_stmt).first()
+        # IDが存在しない場合
+        if workload_obj is None:
+            raise Exception("無効な工数情報IDが指定されました。")
+        # idとuser_idのみを取得
+        workload = { "id": workload_obj.id,
+                     "user_id": workload_obj.user_id }
+    except Exception as e:
+        raise Exception(e)
+
+    # 対象工数が自身が所有もしくはユーザが管理者でなければ、削除できないというメッセージを返却
+    if not (user_info["is_superuser"] or workload.user_id == user_id):
+        return {"message": "削除に失敗しました。\n所有者または管理者でない場合削除できません。"}
+
+    # 削除処理
+    del_stmt = delete(Workload).where(Workload.id == workload["id"])
+
+    try:
+        session.execute(del_stmt)
+        session.commit()
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+    # セッションの終了
+    session.close()
+
+    return {"message": "削除にしました。"}
 
 
 def fetch_specify_condition_workloads_from_db(condition: dict) -> list[dict]:

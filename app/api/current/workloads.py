@@ -9,7 +9,7 @@ from services.auth import Auth_Utils
 from services.workloads import (
     insert_workload_info_into_db, fetch_specify_workload,
     update_specify_workload,
-    # fetch_specify_user_workloads_from_db,
+    delete_workload,
     fetch_specify_condition_workloads_from_db,
 )
 from models.auth import CsrfType, ResponseMessage
@@ -22,20 +22,24 @@ auth = Auth_Utils()
 
 
 @router.get("/db/{workload_id}", response_model=WorkloadInfoFromDB)
-def api_fetch_workload_using_workload_id(workload_id: int):
+def api_fetch_workload_using_workload_id(request: Request, workload_id: int):
     """
     idを指定した工数情報レコードの取得
     """
+    # JWT検証処理を入れる
+    _ = auth.verify_jwt(request)
+
     workload = fetch_specify_workload(workload_id)
     return workload
 
 
 @router.post("/db/post", response_model=ResponseMessage)
-def api_insert_workload(input_form_value: WorkloadForm):
+def api_insert_workload(request: Request, input_form_value: WorkloadForm):
     """
     工数の登録
     """
-    # [TODO] JWT検証処理を入れる
+    # JWT検証処理を入れる
+    _ = auth.verify_jwt(request)
     # [TODO] CSRF検証処理を入れる
     # [TODO] rootユーザかどうかの判定
 
@@ -48,17 +52,32 @@ def api_insert_workload(input_form_value: WorkloadForm):
 
 
 @router.put("/db/update/{workload_id}", response_model=ResponseMessage)
-def api_update_workload(workload_id: int, form_value: WorkloadForm):
+def api_update_workload(request: Request, workload_id: int, form_value: WorkloadForm):
     """
     登録工数の編集
     """
-    # [TODO] JWT検証処理を入れる
+    # JWT検証処理を入れる
+    _ = auth.verify_jwt(request)
     # [TODO] CSRF検証処理を入れる
     # [TODO] rootユーザかどうかの判定
 
     # form値をdictに直し、データを更新用メソッドに渡す
     decoded_form_value = jsonable_encoder(form_value)
     message: dict = update_specify_workload(workload_id, decoded_form_value)
+    return message
+
+
+@router.delete("/db/delete/{workload_id}", response_model=ResponseMessage)
+def api_delete_workload(request: Request, workload_id: int):
+    """
+    登録工数の編集
+    """
+    # JWT検証処理を入れる
+    user_id = auth.verify_jwt(request)
+    # [TODO] CSRF検証処理を入れる
+
+    # form値をdictに直し、データを更新用メソッドに渡す
+    message: dict = delete_workload(workload_id, user_id)
     return message
 
 

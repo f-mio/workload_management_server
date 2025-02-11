@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Response, Request
 from fastapi_csrf_protect import CsrfProtect
 # プロジェクトモジュール
 from services.auth import Auth_Utils
-from services.users import (fetch_user_using_specify_email, )
+from services.users import (fetch_user_using_specify_id, )
 from models.auth import CsrfType
 from models.users import UserInfo
 
@@ -25,6 +25,6 @@ async def get_csrf_token(response: Response, csrf_protect: CsrfProtect = Depends
 
 @router.get("/verify_jwt", response_model=UserInfo)
 async def verify_jwt_token(request: Request):
-    email = auth.verify_jwt(request)
-    user_info = fetch_user_using_specify_email(email)
+    user_id = auth.verify_jwt(request)
+    user_info = fetch_user_using_specify_id(user_id)
     return user_info
