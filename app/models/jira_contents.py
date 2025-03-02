@@ -44,10 +44,10 @@ class IssueInfoFromDB(BaseModel):
 
 
 class SubtaskWithParents(BaseModel):
-    id: int
-    type: str
-    name: str
-    status: str
+    subtask_id: int
+    subtask_type: str
+    subtask_name: str
+    subtask_status: str
     limit_date: dt.date | None
     description: str | None
     project_id: int

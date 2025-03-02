@@ -571,19 +571,18 @@ def create_project_issue_hierarchical_structure_df() -> list[dict]:
     subtask_with_structure = subtask_with_structure[
         [ "subtask_id", "type_subtask", "name_subtask", "status_subtask",
           "limit_date_subtask", "description_subtask",
-          "id", "name",
+          "id_p", "name_p",
           "issue_id_1", "type", "name",
           "issue_id_2", "type_story", "name_story",
           "update_timestamp_subtask", "create_timestamp_subtask"
         ]]
     column_name = [
-        "id", "type", "name", "status",
+        "subtask_id", "subtask_type", "subtask_name", "subtask_status",
         "limit_date", "description",
         "project_id", "project_name",
         "issue_id_1", "issue_type_1", "issue_name_1",
         "issue_id_2", "issue_type_2", "issue_name_2",
-        "update_timestamp", "create_timestamp"
-        ]
+        "update_timestamp", "create_timestamp" ]
     subtask_with_structure.columns = column_name
 
     return subtask_with_structure
