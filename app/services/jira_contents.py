@@ -5,6 +5,7 @@ import requests
 import datetime as dt
 from requests.auth import HTTPBasicAuth
 # サードパーティ製モジュール
+import pandas as pd
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
@@ -430,6 +431,66 @@ def fetch_all_subtasks_from_db() -> list[dict]:
         raise Exception(e)
 
 
+def fetch_all_issues_from_db() -> list[dict]:
+    """
+    DBに登録されているissueを取得して返却する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    projects: list[dict]
+        key: id, name, project_id, parent_issue_id, type,
+             is_subtask, status, limit_date, description,
+             update_timestamp, create_timestamp
+    """
+    # セッションの作成
+    Session = sessionmaker(bind=workload_db_engine)
+    session = Session()
+    # 取得用のSQL作成
+    stmt = select(Issue).order_by(Issue.project_id, Issue.parent_issue_id, Issue.id)
+    try:
+        # DBからのデータ取得
+        issues_raw = session.execute(stmt).all()
+        session.close()
+        # データの成形
+        issues = [
+            { "id": info[0].id, "name": info[0].name, "project_id": info[0].project_id,
+              "parent_issue_id": info[0].parent_issue_id, "type": info[0].type,
+              "is_subtask": info[0].is_subtask, "status": info[0].status,
+              "limit_date": info[0].limit_date, "description": info[0].description,
+              "update_timestamp": info[0].update_timestamp,
+              "create_timestamp": info[0].create_timestamp }
+            for info in issues_raw ]
+
+        return issues
+    except Exception as e:
+        session.close()
+        raise Exception(e)
+
+
+def fetch_all_subtasks_with_parents_from_db() -> list[dict]:
+    """
+    DBに登録されているsubtaskを取得して返却する。
+
+    Attributes
+    ----------
+    None
+
+    Returns
+    -------
+    projects: list[dict]
+        key: id, name, project_id, parent_issue_id, type,
+             is_subtask, status, limit_date, description,
+             update_timestamp, create_timestamp
+    """
+    subtasks = create_project_issue_hierarchical_structure_df()
+
+    return subtasks.to_dict(orient="records")
+
+
 def fetch_all_subtasks_with_path_from_db():
     """
     DBに登録されているsubtaskを取得して返却する。
@@ -476,3 +537,127 @@ def fetch_all_subtasks_with_path_from_db():
     except Exception as e:
         session.close()
         raise Exception(e)
+
+
+def create_project_issue_hierarchical_structure_df() -> list[dict]:
+    """
+    登録されているProjectおよびIssue情報から末端のsubtaskを含めた横方向に長いDFを作成し、list[dict]型で返す。
+    (Issueはサブタスク以外は第3階層までを取得)
+    """
+    # DBからProject, Issueデータの取得
+    projects = fetch_all_projects_from_db()
+    issues = fetch_all_issues_from_db()
+
+    # project, issueデータをDataFrameに変換
+    project_df = pd.DataFrame(projects)
+    issue_df = pd.DataFrame(issues)
+
+    # Issueをツリー構造にして取得
+    issue_no_df = issue_df[["id", "is_subtask", "parent_issue_id"]].copy()
+    hierarchical_id_df = create_issue_id_hierarchical_structure(issue_no_df)
+
+    # Issueツリーとprojectを結合
+    hierarchical_df = pd.merge(hierarchical_id_df, issue_df, how="left", left_on="issue_id_1", right_on="id")
+    hierarchical_df = pd.merge(hierarchical_df, issue_df, how="left", left_on="issue_id_2", right_on="id", suffixes=("", "_story"))
+    hierarchical_df = pd.merge(hierarchical_df, issue_df, how="left", left_on="subtask_id", right_on="id", suffixes=("", "_subtask"))
+
+    # projectとの結合
+    subtask_with_structure = pd.merge(
+        project_df, hierarchical_df,
+        how="inner", left_on="id", right_on="project_id", suffixes=["_p", ""])
+    # print(subtask_with_structure)
+
+    # 必要なカラムのみに絞り、カラム名を付け直す
+    subtask_with_structure = subtask_with_structure[
+        [ "subtask_id", "type_subtask", "name_subtask", "status_subtask",
+          "limit_date_subtask", "description_subtask",
+          "id", "name",
+          "issue_id_1", "type", "name",
+          "issue_id_2", "type_story", "name_story",
+          "update_timestamp_subtask", "create_timestamp_subtask"
+        ]]
+    column_name = [
+        "id", "type", "name", "status",
+        "limit_date", "description",
+        "project_id", "project_name",
+        "issue_id_1", "issue_type_1", "issue_name_1",
+        "issue_id_2", "issue_type_2", "issue_name_2",
+        "update_timestamp", "create_timestamp"
+        ]
+    subtask_with_structure.columns = column_name
+
+    return subtask_with_structure
+
+
+def create_issue_id_hierarchical_structure(issue_id_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    JIRAのID毎に親子関係を表したDFを作成する。
+
+    Attributes
+    ----------
+    issue_id_df: DataFrame
+        id, is_subtask, parent_issue_idカラムから成り立つdf
+
+    Returns
+    -------
+    hierarchical_id_df: DataFrame
+        issue_id_1, issue_id_2, subtask_idカラムから成り立つDF
+        (issue_id_1は最上位のissueでissue_id_2はその子供のissue(id_2がnullの場合はid_1が入る))
+    """
+
+    def extract_subtask_id_from_df_row(df_row, max_id):
+        """
+        df内recordのsubtask_idを取得するためのメソッド
+        """
+        if max_id < 2:
+            return None
+
+        for idx in range(max_id, 1, -1):
+            if df_row[f"is_subtask_{idx}"] == True:
+                return str(df_row[f"id_{idx}"])
+        return None
+
+    # 階層の一番上のIssueと子以降のIssueを振り分け
+    top_issue_id_df = issue_id_df[ pd.isnull(issue_id_df["parent_issue_id"]) ]
+    child_issue_id_df = issue_id_df.dropna(subset=["parent_issue_id"])
+
+    # 取得するIssueを作成
+    issue_no_tree_df = top_issue_id_df.copy()
+
+    max_id = 1
+    # Issueの階層構造を再現するための結合
+    for idx in range(1, 100, 1):
+        col_length = len(issue_no_tree_df.columns)
+        left_on_col_name = f"id_{idx}" if col_length > 3 else "id"
+        issue_no_tree_df = pd.merge(
+            issue_no_tree_df, child_issue_id_df,
+            how="left", left_on=left_on_col_name, right_on="parent_issue_id",
+            suffixes=("", f"_{idx+1}"))
+
+        # レコード数とjoinさせた要素のNULL数が一致した場合にbreak
+        num_of_records = len(issue_no_tree_df)
+        right_null_records = len(issue_no_tree_df[pd.isnull(issue_no_tree_df[f"id_{idx+1}"])])
+        if num_of_records == right_null_records:
+            issue_no_tree_df.dropna(how="all", axis=1, inplace=True)
+            max_id = idx
+            break
+
+    # subtask_idの列を作成 (複数の列にsubtask_idが散らばっている可能性があるため)
+    issue_no_tree_df["subtask_id"] = issue_no_tree_df.apply(
+        extract_subtask_id_from_df_row, args=(max_id,), axis="columns")
+    
+    # JIRAのプレミアム版の場合、Issueで2階層以上の構造を取れるので、ここをもう少し深くしても良いかもしれない。
+    hierarchical_id_df = issue_no_tree_df[["id", "id_2", "subtask_id"]]
+    hierarchical_id_df.columns = ["issue_id_1", "issue_id_2", "subtask_id"]
+
+    # subtask_idがNULLのレコードは除外
+    hierarchical_id_df = hierarchical_id_df.dropna(subset=["subtask_id"])
+    # subtask_idを整数に変換
+    hierarchical_id_df.loc[:, "subtask_id"] = hierarchical_id_df["subtask_id"].apply(lambda x: int(float(x)))
+    # issue_id_2がNULLのものはissue_id_1で補完
+    hierarchical_id_df.loc[:, "issue_id_2"] = hierarchical_id_df.apply(
+        lambda x: x["issue_id_2"] if not pd.isnull(x["issue_id_2"]) else x["issue_id_1"],
+        axis="columns"
+    )
+
+    return hierarchical_id_df
